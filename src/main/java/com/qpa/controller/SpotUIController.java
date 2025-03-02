@@ -49,9 +49,9 @@ public class SpotUIController {
         model.addAttribute("spotCreateDTO", new SpotCreateDTO());
 
         // Fetch dropdown values for spot types & price types
-        List<String> spotTypes = Arrays.asList("Compact", "Standard", "Large");
-        List<String> priceTypes = Arrays.asList("Hourly", "Daily", "Monthly");
-        List<String> vehicleTypes = Arrays.asList("Car", "Bike", "EV");
+        List<String> spotTypes = Arrays.asList("Covered", "Uncovered","Underground");
+        List<String> priceTypes = Arrays.asList("Hourly", "Daily");
+        List<String> vehicleTypes = Arrays.asList("2-WHEELER","3-WHEELER", "4-WHEELER","SUV","VAN","MINI_TRUCK","TRUCK");
 
         model.addAttribute("spotTypes", spotTypes);
         model.addAttribute("priceTypes", priceTypes);
