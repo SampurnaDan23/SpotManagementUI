@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Login</title>
+  <style>
+    /* General Styling */
+    body {
+        font-family: Arial, sans-serif;
+        background-image: url("../images/background.jpg"); /* Add a background image */
+		background-color: rgb(254, 231, 211);
+		background-blend-mode: overlay;
+        background-size: cover;
+        background-position: center;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        flex-direction: column;
+    }
+
+    /* Login Container */
+    .login-container {
+        background: rgba(255, 255, 255, 0.9); /* Semi-transparent white */
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        width: 320px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    label {
+        font-weight: bold;
+        margin-top: 10px;
+        display: block;
+        color: #333;
+    }
+
+    input {
+        width: 90%;
+        padding: 8px;
+        margin: 5px 0;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+
+    /* Button Styling */
+    button {
+        width: 100%;
+        background-color: #ff6600; /* Orange color like the highlighted tab */
+        color: white;
+        padding: 10px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+        margin-top: 10px;
+    }
+
+    button:hover {
+        background-color: #cc5500;
+    }
+
+    /* Link Styling */
+    .register-link {
+        text-align: center;
+        margin-top: 15px;
+    }
+
+    .register-link a {
+        color: #0066cc;
+        text-decoration: none;
+    }
+
+    .register-link a:hover {
+        text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <h2>LOGIN</h2>
+    <form th:action="@{/login}" method="post">
+      <!--<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />-->
+
+      <label for="username">Username:</label>
+      <input type="text" id="username" name="username" required>
+
+      <label for="password">Password:</label>
+      <input type="password" id="password" name="password" required>
+
+      <button type="submit">Login</button>
+    </form>
+    
+    <!-- Centered register link -->
+    <div class="register-link">
+      <a th:href="@{/register}">Don't have an account? Register here</a>
+    </div>
+  </div>
+</body>
+</html>

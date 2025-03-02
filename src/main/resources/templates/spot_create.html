@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Create Spot</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* Global Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+			background-image: url("../images/background.jpg"); /* Add a background image */
+			background-color: rgb(254, 231, 211);
+			background-blend-mode: overlay;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background: #fff;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            overflow-y: auto;
+            max-height: 90vh; /* Prevents overflow beyond screen */
+        }
+
+        h1 {
+            margin-bottom: 15px;
+            font-size: 24px;
+            color: #333;
+        }
+
+        nav {
+            margin-bottom: 20px;
+        }
+
+        nav a {
+            text-decoration: none;
+            margin: 0 10px;
+            color: #007bff;
+            font-weight: bold;
+        }
+
+        .form-group {
+            text-align: left;
+            margin-bottom: 15px;
+        }
+
+        label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        input[type="checkbox"] {
+            width: auto;
+            margin-right: 10px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .btn {
+            background-color: #007bff;
+            color: white;
+            padding: 10px;
+            width: 100%;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .btn:hover {
+            background-color: #0056b3;
+        }
+
+        /* Scrollable for small screens */
+        @media (max-height: 600px) {
+            .container {
+                max-height: 80vh;
+                overflow-y: auto;
+            }
+        }
+		
+		.vehicle-container {
+		       display: flex;
+		       flex-wrap: wrap;
+		       gap: 15px;
+		       align-items: center;
+		   }
+
+		   .vehicle-container input[type="checkbox"] {
+		       margin-right: 5px;
+		   }
+		   
+		   .ev-charging-container {
+			display: flex;
+			    align-items: flex-start;
+			    gap: 10px;
+			    flex-direction: row;
+			    flex-wrap: nowrap;
+			    align-content: stretch;
+			    justify-content: flex-start;
+		    }
+    </style>
+
+    <script>
+        function togglePriceInput() {
+            let priceType = document.getElementById("priceType").value;
+            let priceContainer = document.getElementById("priceContainer");
+
+            if (priceType) {
+                priceContainer.classList.remove("hidden");
+            } else {
+                priceContainer.classList.add("hidden");
+            }
+        }
+    </script>
+</head>
+<body>
+
+<div class="container">
+    <h1>Create a New Spot</h1>
+
+
+    <form th:action="@{/spots/create}" th:object="${spotCreateDTO}" method="post" enctype="multipart/form-data">
+        
+        <div class="form-group">
+            <label for="spotNumber">Spot Number:</label>
+            <input type="text" id="spotNumber" th:field="*{spotNumber}" required>
+        </div>
+
+        <!-- Price Type Selection -->
+        <div class="form-group">
+            <label for="priceType">Price Type:</label>
+            <select id="priceType" th:field="*{priceType}" required onchange="togglePriceInput()">
+                <option value="">-- Select Price Type --</option>
+                <option th:each="type : ${priceTypes}" th:value="${type}" th:text="${type}"></option>
+            </select>
+        </div>
+
+        <!-- Price Input (Initially Hidden) -->
+        <div class="form-group hidden" id="priceContainer">
+            <label for="price">Price:</label>
+            <input type="number" id="price" th:field="*{price}" step="0.01">
+        </div>
+
+		<div class="form-group ev-charging-container">
+		    <label for="hasEVCharging">Has EV Charging:</label>
+		    <input type="checkbox" id="hasEVCharging" th:field="*{hasEVCharging}">
+		</div>
+
+        <div class="form-group">
+            <label for="spotType">Spot Type:</label>
+            <select id="spotType" th:field="*{spotType}" required>
+                <option value="">-- Select Spot Type --</option>
+                <option th:each="type : ${spotTypes}" th:value="${type}" th:text="${type}"></option>
+            </select>
+        </div>
+
+        <h3>LOCATION</h3>
+        <div class="form-group">
+            <label for="location.streetAddress">Address:</label>
+            <input type="text" id="location.streetAddress" th:field="*{location.streetAddress}" required>
+        </div>
+        <div class="form-group">
+            <label for="location.city">City:</label>
+            <input type="text" id="location.city" th:field="*{location.city}" required>
+        </div>
+        <div class="form-group">
+            <label for="location.state">State:</label>
+            <input type="text" id="location.state" th:field="*{location.state}" required>
+        </div>
+        <div class="form-group">
+            <label for="location.pincode">Pin Code:</label>
+            <input type="text" id="location.pincode" th:field="*{location.pincode}" required>
+        </div>
+
+		<div class="form-group">
+		    <label>Supported Vehicle Types:</label>
+		    <div class="vehicle-container">
+		        <div th:each="vehicleType : ${vehicleTypes}">
+		            <input type="checkbox" th:field="*{supportedVehicle}" th:value="${vehicleType}" th:id="${'vehicle-' + vehicleType}">
+		            <label th:for="${'vehicle-' + vehicleType}" th:text="${vehicleType}"></label>
+		        </div>
+		    </div>
+		</div>
+
+        <button type="submit" class="btn">Create Spot</button>
+    </form>
+</div>
+
+</body>
+</html>

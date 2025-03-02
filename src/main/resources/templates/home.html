@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Home</title>
+  <style>
+    /* General Styling */
+    body {
+        font-family: Arial, sans-serif;
+		background-image: url("../images/background.jpg"); /* Add a background image */
+		background-color: rgb(254, 231, 211);
+		background-blend-mode: overlay;
+        background-size: cover;
+        background-position: center;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        flex-direction: column;
+        text-align: center;
+    }
+
+    /* Container Styling */
+    .container {
+        background: rgba(255, 255, 255, 0.9); /* Semi-transparent white */
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        width: 350px;
+    }
+
+    h1 {
+        color: #333;
+        margin-bottom: 20px;
+    }
+
+    /* Navigation Styling */
+    nav {
+        margin-bottom: 20px;
+    }
+
+    nav a {
+        color: #0066cc;
+        text-decoration: none;
+        font-weight: bold;
+        margin: 0 10px;
+    }
+
+    nav a:hover {
+        text-decoration: underline;
+    }
+
+    /* Button Styling */
+    button {
+        width: 100%;
+        background-color: #ff6600; /* Orange Button */
+        color: white;
+        padding: 10px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+        margin-top: 15px;
+    }
+
+    button:hover {
+        background-color: #cc5500;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Welcome to the Home Page!</h1>
+    
+    <nav>
+      <a th:href="@{/home}">Home</a> |
+      <a th:href="@{/spots/create}">Create Spot</a> |
+      <a th:href="@{/spots/list}">Spot List</a>
+    </nav>
+
+    <p>You have successfully logged in.</p>
+
+    <form th:action="@{/logout}" method="post">
+      <!--<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />-->
+      <button type="submit">Logout</button>
+    </form>
+  </div>
+</body>
+</html>
