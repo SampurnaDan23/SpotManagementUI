@@ -31,6 +31,7 @@ import jakarta.servlet.http.HttpSession;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.List;
 
 @Controller
@@ -242,9 +243,23 @@ public class SpotUIController {
             return "redirect:/login";
         }
 
-        Spot[] spots = restTemplate.getForObject(BASE_URL + "/spots/all", Spot[].class);
+        SpotResponseDTO[] spots = restTemplate.getForObject(BASE_URL + "/spots/all", SpotResponseDTO[].class);
+
+        for (SpotResponseDTO spot : spots) {
+            if (spot.getSpotImages() != null) {
+                spot.setSpotImagesBase64(convertImagesToBase64(spot.getSpotImages()));
+            }
+        }
 
         model.addAttribute("spots", spots);
         return "spot_list";
+    }
+
+    public List<String> convertImagesToBase64(List<byte[]> images) {
+        List<String> base64Images = new ArrayList<>();
+        for (byte[] image : images) {
+            base64Images.add(Base64.getEncoder().encodeToString(image));
+        }
+        return base64Images;
     }
 }
