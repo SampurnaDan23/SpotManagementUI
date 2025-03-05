@@ -3,6 +3,7 @@ package com.qpa.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -19,10 +20,11 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.qpa.dto.SpotCreateDTO;
 import com.qpa.dto.SpotResponseDTO;
+import com.qpa.dto.SpotStatistics;
 import com.qpa.dto.LoginDTO;
 import com.qpa.dto.RegisterDTO;
 import com.qpa.entity.PriceType;
-import com.qpa.entity.Spot;
+import com.qpa.entity.SpotStatus;
 import com.qpa.entity.SpotType;
 import com.qpa.entity.User;
 import com.qpa.entity.VehicleType;
@@ -30,9 +32,9 @@ import com.qpa.entity.VehicleType;
 import jakarta.servlet.http.HttpSession;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Controller
 public class SpotUIController {
@@ -41,6 +43,24 @@ public class SpotUIController {
     private RestTemplate restTemplate;
 
     private final String BASE_URL = "http://localhost:8080/api"; // Backend URL
+
+    private List<String> cities = List.of(
+        "Mumbai", "Delhi", "Bangalore", "Hyderabad", "Chennai", "Kolkata", "Pune", "Jaipur",
+        "Ahmedabad", "Lucknow", "Kanpur", "Nagpur", "Indore", "Thane", "Bhopal", "Visakhapatnam",
+        "Patna", "Vadodara", "Ghaziabad", "Ludhiana", "Agra", "Nashik", "Faridabad", "Meerut",
+        "Rajkot", "Varanasi", "Srinagar", "Aurangabad", "Dhanbad", "Amritsar", "Allahabad",
+        "Ranchi", "Coimbatore", "Jabalpur", "Gwalior", "Vijayawada", "Jodhpur", "Madurai",
+        "Raipur", "Kota", "Guwahati", "Chandigarh", "Solapur", "Hubli–Dharwad", "Bareilly",
+        "Moradabad", "Mysore", "Tiruchirappalli", "Tiruppur", "Dehradun", "Jalandhar", 
+        "Aligarh", "Bhubaneswar", "Salem", "Warangal", "Guntur", "Bhiwandi", "Saharanpur",
+        "Gorakhpur", "Bikaner", "Amravati", "Noida", "Jamshedpur", "Bhilai", "Cuttack",
+        "Firozabad", "Kochi", "Nellore", "Bhavnagar", "Jammu", "Udaipur", "Davangere", 
+        "Bellary", "Kurnool", "Malegaon", "Kolhapur", "Ajmer", "Anantapur", "Erode",
+        "Rourkela", "Tirunelveli", "Akola", "Latur", "Panipat", "Mathura", "Kollam",
+        "Bilaspur", "Shimoga", "Chandrapur", "Junagadh", "Thrissur", "Alwar", "Bardhaman",
+        "Kakinada", "Nizamabad", "Parbhani", "Tumkur", "Hisar", "Kharagpur", "Nanded",
+        "Ichalkaranji", "Bathinda", "Shahjahanpur", "Rampur", "Ratlam", "Hapur", "Rewa"
+    );
 
     // Home Page
     @GetMapping("/")
@@ -230,6 +250,7 @@ public class SpotUIController {
         model.addAttribute("spotTypes", SpotType.values());
         model.addAttribute("priceTypes", PriceType.values());
         model.addAttribute("vehicleTypes", VehicleType.values());
+        model.addAttribute("cities", cities);
 
         return "spot_create";
     }
@@ -253,6 +274,109 @@ public class SpotUIController {
 
         model.addAttribute("spots", spots);
         return "spot_list";
+    }
+
+    @GetMapping("/spots/search")
+    public String searchSpots(
+        @RequestParam(required = false) String city,
+        @RequestParam(required = false) SpotType spotType,
+        @RequestParam(required = false) Boolean hasEVCharging,
+        @RequestParam(required = false) VehicleType supportedVehicleType,
+        @RequestParam(required = false) SpotStatus status,
+        Model model,
+        HttpSession session
+    ) {
+        User currentUser = (User) session.getAttribute("currentUser");
+        if (currentUser == null) {
+            return "redirect:/login";
+        }
+
+        // Prepare search criteria
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        if (city != null && !city.isEmpty()) params.add("city", city);
+        if (spotType != null) params.add("spotType", spotType.toString());
+        if (hasEVCharging != null) params.add("hasEVCharging", hasEVCharging.toString());
+        if (supportedVehicleType != null) params.add("supportedVehicleType", supportedVehicleType.toString());
+        if (status != null) params.add("status", status.toString());
+
+        String queryParams = params
+            .entrySet()
+            .stream()
+            .map(entry -> entry.getKey() + "=" + entry.getValue().get(0))
+            .collect(Collectors.joining("&"));
+
+        String urlWithParams = BASE_URL + "/spots/search?" + queryParams;
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+        HttpEntity<?> requestEntity = new HttpEntity<>(params, headers);
+
+        ResponseEntity<SpotResponseDTO[]> response = restTemplate.exchange(
+            urlWithParams,
+            HttpMethod.GET, 
+            null, 
+            SpotResponseDTO[].class
+        );
+
+        SpotResponseDTO[] spots = response.getBody();
+
+        // Convert images to Base64
+        if (spots != null) {
+            for (SpotResponseDTO spot : spots) {
+                if (spot.getSpotImages() != null) {
+                    spot.setSpotImagesBase64(convertImagesToBase64(spot.getSpotImages()));
+                }
+            }
+        }
+        
+        model.addAttribute("spots", spots);
+        model.addAttribute("spotTypes", SpotType.values());
+        model.addAttribute("vehicleTypes", VehicleType.values());
+        model.addAttribute("status", SpotStatus.values());
+        model.addAttribute("cities", cities);
+        return "search_spot";
+    }
+
+    @GetMapping("/spots/statistics")
+    public String getSpotStatistics(Model model, HttpSession session) {
+        User currentUser = (User) session.getAttribute("currentUser");
+        if (currentUser == null) {
+            return "redirect:/login";
+        }
+
+        SpotStatistics statistics = restTemplate.getForObject(
+            BASE_URL + "/spots/statistics", 
+            SpotStatistics.class
+        );
+
+        model.addAttribute("statistics", statistics);
+        return "statistics";
+    }
+
+    // Owner's Spots Page
+    @GetMapping("/spots/owner")
+    public String getOwnerSpots(Model model, HttpSession session) {
+        User currentUser = (User) session.getAttribute("currentUser");
+        if (currentUser == null) {
+            return "redirect:/login";
+        }
+
+        SpotResponseDTO[] spots = restTemplate.getForObject(
+            BASE_URL + "/spots/owner?userId=" + currentUser.getId(), 
+            SpotResponseDTO[].class
+        );
+
+        // Convert images to Base64
+        if (spots != null) {
+            for (SpotResponseDTO spot : spots) {
+                if (spot.getSpotImages() != null) {
+                    spot.setSpotImagesBase64(convertImagesToBase64(spot.getSpotImages()));
+                }
+            }
+        }
+
+        model.addAttribute("spots", spots);
+        return "owner_spots";
     }
 
     public List<String> convertImagesToBase64(List<byte[]> images) {
