@@ -62,7 +62,7 @@ public class SpotCreateDTO {
 		this.location = location;
 	}
 
-	public boolean isHasEVCharging() {
+	public boolean getHasEVCharging() {
 		return hasEVCharging;
 	}
 
