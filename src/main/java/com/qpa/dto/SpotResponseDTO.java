@@ -1,6 +1,5 @@
 package com.qpa.dto;
 
-import java.time.DayOfWeek;
 import java.util.List;
 import java.util.Set;
 
@@ -21,6 +20,7 @@ public class SpotResponseDTO {
 	private Double rating;
 	private List<byte[]> spotImages;
 	private Set<VehicleType> supportedVehicleTypes;
+	private List<String> spotImagesBase64;
 	
 	public SpotResponseDTO() {
 
@@ -28,7 +28,7 @@ public class SpotResponseDTO {
 
 	public SpotResponseDTO(Long spotId, String spotNumber, SpotType spotType, SpotStatus status, LocationDTO location,
 			boolean hasEVCharging, double price, PriceType priceType, Double rating,
-			List<byte[]> spotImages, Set<VehicleType> supportedVehicleTypes) {
+			List<byte[]> spotImages, Set<VehicleType> supportedVehicleTypes, List<String> spotImagesBase64) {
 		super();
 		this.spotId = spotId;
 		this.spotNumber = spotNumber;
@@ -41,6 +41,7 @@ public class SpotResponseDTO {
 		this.rating = rating;
 		this.spotImages = spotImages;
 		this.supportedVehicleTypes = supportedVehicleTypes;
+		this.spotImagesBase64 = spotImagesBase64;
 	}
 
 	public Long getSpotId() {
@@ -129,5 +130,13 @@ public class SpotResponseDTO {
 
 	public void setSupportedVehicleTypes(Set<VehicleType> supportedVehicleTypes) {
 		this.supportedVehicleTypes = supportedVehicleTypes;
+	}
+
+	public List<String> getSpotImagesBase64() {
+		return spotImagesBase64;
+	}
+
+	public void setSpotImagesBase64(List<String> spotImagesBase64) {
+		this.spotImagesBase64 = spotImagesBase64;
 	}
 }
