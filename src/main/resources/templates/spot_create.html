@@ -131,89 +131,110 @@
 
     <script>
         function togglePriceInput() {
-            let priceType = document.getElementById("priceType").value;
-            let priceContainer = document.getElementById("priceContainer");
-
-            if (priceType) {
-                priceContainer.classList.remove("hidden");
+            var priceType = document.getElementById('priceType');
+            var priceContainer = document.getElementById('priceContainer');
+            
+            if (priceType.value) {
+                priceContainer.style.display = 'block';
             } else {
-                priceContainer.classList.add("hidden");
+                priceContainer.style.display = 'none';
             }
+        }
+
+        // Call on page load to set initial state
+        window.onload = function() {
+            togglePriceInput();
         }
     </script>
 </head>
 <body>
-
-<div class="container">
-    <h1>Create a New Spot</h1>
-
-
-    <form th:action="@{/spots/create}" th:object="${spotCreateDTO}" method="post" enctype="multipart/form-data">
+    <div class="container">
+        <h1>Create a New Spot</h1>
         
-        <div class="form-group">
-            <label for="spotNumber">Spot Number:</label>
-            <input type="text" id="spotNumber" th:field="*{spotNumber}" required>
-        </div>
+        <nav>
+            <a th:href="@{/home}">Home</a> |
+            <a th:href="@{/spots/create}">Create Spot</a> |
+            <a th:href="@{/spots/list}">Spot List</a> |
+            <a th:href="@{/logout}">Logout</a>
+        </nav>
 
-        <!-- Price Type Selection -->
-        <div class="form-group">
-            <label for="priceType">Price Type:</label>
-            <select id="priceType" th:field="*{priceType}" required onchange="togglePriceInput()">
-                <option value="">-- Select Price Type --</option>
-                <option th:each="type : ${priceTypes}" th:value="${type}" th:text="${type}"></option>
-            </select>
-        </div>
+        <form th:action="@{/spots/create}" th:object="${spotCreateDTO}" method="post" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="spotNumber">Spot Number:</label>
+                <input type="text" id="spotNumber" th:field="*{spotNumber}" required>
+            </div>
 
-        <!-- Price Input (Initially Hidden) -->
-        <div class="form-group hidden" id="priceContainer">
-            <label for="price">Price:</label>
-            <input type="number" id="price" th:field="*{price}" step="0.01">
-        </div>
+            <div class="form-group">
+                <label for="priceType">Price Type:</label>
+                <select id="priceType" th:field="*{priceType}" required onchange="togglePriceInput()">
+                    <option value="">-- Select Price Type --</option>
+                    <option th:each="type : ${priceTypes}" th:value="${type}" th:text="${type}"></option>
+                </select>
+            </div>
 
-		<div class="form-group ev-charging-container">
-		    <label for="hasEVCharging">Has EV Charging:</label>
-		    <input type="checkbox" id="hasEVCharging" th:field="*{hasEVCharging}">
-		</div>
+            <div class="form-group hidden" id="priceContainer">
+                <label for="price">Price:</label>
+                <input type="number" id="price" th:field="*{price}" step="0.01">
+            </div>
 
-        <div class="form-group">
-            <label for="spotType">Spot Type:</label>
-            <select id="spotType" th:field="*{spotType}" required>
-                <option value="">-- Select Spot Type --</option>
-                <option th:each="type : ${spotTypes}" th:value="${type}" th:text="${type}"></option>
-            </select>
-        </div>
+            <div class="form-group ev-charging-container">
+                <label for="hasEVCharging">Has EV Charging:</label>
+                <input type="checkbox" 
+                    id="hasEVCharging" 
+                    name="hasEVCharging"
+                    th:field="*{hasEVCharging}"
+                />
+            </div>
 
-        <h3>LOCATION</h3>
-        <div class="form-group">
-            <label for="location.streetAddress">Address:</label>
-            <input type="text" id="location.streetAddress" th:field="*{location.streetAddress}" required>
-        </div>
-        <div class="form-group">
-            <label for="location.city">City:</label>
-            <input type="text" id="location.city" th:field="*{location.city}" required>
-        </div>
-        <div class="form-group">
-            <label for="location.state">State:</label>
-            <input type="text" id="location.state" th:field="*{location.state}" required>
-        </div>
-        <div class="form-group">
-            <label for="location.pincode">Pin Code:</label>
-            <input type="text" id="location.pincode" th:field="*{location.pincode}" required>
-        </div>
+            <div class="form-group">
+                <label for="spotType">Spot Type:</label>
+                <select id="spotType" th:field="*{spotType}" required>
+                    <option value="">-- Select Spot Type --</option>
+                    <option th:each="type : ${spotTypes}" th:value="${type}" th:text="${type}"></option>
+                </select>
+            </div>
 
-		<div class="form-group">
-		    <label>Supported Vehicle Types:</label>
-		    <div class="vehicle-container">
-		        <div th:each="vehicleType : ${vehicleTypes}">
-		            <input type="checkbox" th:field="*{supportedVehicle}" th:value="${vehicleType}" th:id="${'vehicle-' + vehicleType}">
-		            <label th:for="${'vehicle-' + vehicleType}" th:text="${vehicleType}"></label>
-		        </div>
-		    </div>
-		</div>
+            <h3>LOCATION</h3>
+            <div class="form-group">
+                <label for="location.streetAddress">Address:</label>
+                <input type="text" id="location.streetAddress" th:field="*{location.streetAddress}" required>
+            </div>
+            <div class="form-group">
+                <label for="location.city">City:</label>
+                <input type="text" id="location.city" th:field="*{location.city}" required>
+            </div>
+            <div class="form-group">
+                <label for="location.state">State:</label>
+                <input type="text" id="location.state" th:field="*{location.state}" required>
+            </div>
+            <div class="form-group">
+                <label for="location.pincode">Pin Code:</label>
+                <input type="text" id="location.pincode" th:field="*{location.pincode}" required>
+            </div>
 
-        <button type="submit" class="btn">Create Spot</button>
-    </form>
-</div>
+            <div class="form-group">
+                <label>Supported Vehicle Types:</label>
+                <div class="vehicle-container">
+                    <div th:each="vehicleType : ${vehicleTypes}">
+                        <input type="checkbox" th:field="*{supportedVehicle}" 
+                               th:value="${vehicleType}" 
+                               th:id="${'vehicle-' + vehicleType}">
+                        <label th:for="${'vehicle-' + vehicleType}" th:text="${vehicleType}"></label>
+                    </div>
+                </div>
+            </div>
 
+            <div class="form-group">
+                <label for="spotImage">Upload Spot Image:</label>
+                <input type="file" id="spotImage" name="imageFile" accept="image/*">
+            </div>
+
+            <button type="submit" class="btn">Create Spot</button>
+        </form>
+
+        <div th:if="${error}" class="error-message" style="color: red;">
+            <p th:text="${error}"></p>
+        </div>
+    </div>
 </body>
 </html>

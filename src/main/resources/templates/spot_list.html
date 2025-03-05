@@ -2,41 +2,59 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Spot List</title>
+    <title>Available Spots</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
 </head>
 <body>
-<h1>Available Spots</h1>
-<nav>
-    <a th:href="@{/home}">Home</a> |
-    <a th:href="@{/spots/create}">Create Spot</a> |
-    <a th:href="@{/spots/list}">Spot List</a>
-</nav>
+    <div class="container">
+        <h1>Available Spots</h1>
 
-<table>
-    <thead>
-    <tr>
-        <th>Spot Number</th>
-        <th>Type</th>
-        <th>Location</th>
-        <th>Price</th>
-        <th>EV Charging</th>
-        <th>Status</th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr th:each="spot : ${spots}">
-        <td th:text="${spot.spotNumber}"></td>
-        <td th:text="${spot.spotType}"></td>
-        <td th:text="${spot.location != null ? spot.location.city + ', ' + spot.location.state : 'N/A'}"></td>
-        <td th:text="${spot.price + ' (' + spot.priceType + ')'}"></td>
-        <td th:text="${spot.hasEVCharging ? 'Yes' : 'No'}"></td>
-        <td th:text="${spot.status}"></td>
-    </tr>
-    </tbody>
-</table>
+        <nav>
+            <a th:href="@{/home}">Home</a> |
+            <a th:href="@{/spots/create}">Create Spot</a> |
+            <a th:href="@{/spots/list}">Spot List</a> |
+            <a th:href="@{/logout}">Logout</a>
+        </nav>
 
-<div th:if="${spots.empty}">
-    <p>No spots available.</p>
-</div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Spot Number</th>
+                    <th>Type</th>
+                    <th>Location</th>
+                    <th>Price</th>
+                    <th>EV Charging</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="spot : ${spots}">
+                    <td th:text="${spot.spotNumber}"></td>
+                    <td th:text="${spot.spotType}"></td>
+                    <td th:text="${spot.location != null ? spot.location.city + ', ' + spot.location.state : 'N/A'}"></td>
+                    <td th:text="${spot.price + ' (' + spot.priceType + ')'}"></td>
+                    <td th:text="${spot.hasEVCharging ? 'Yes' : 'No'}"></td>
+                    <td th:text="${spot.status}"></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div th:if="${#arrays.isEmpty(spots)}">
+            <p>No spots available.</p>
+        </div>
+    </div>
 </body>
 </html>
