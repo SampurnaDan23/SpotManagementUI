@@ -29,6 +29,9 @@ import com.qpa.entity.SpotType;
 import com.qpa.entity.User;
 import com.qpa.entity.VehicleType;
 
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
 import java.util.ArrayList;
@@ -43,6 +46,7 @@ public class SpotUIController {
     private RestTemplate restTemplate;
 
     private final String BASE_URL = "http://localhost:8080/api"; // Backend URL
+    private final int SESSION_TIMEOUT = 60 * 60 * 24 * 7; // 7 days in seconds
 
     private List<String> cities = List.of(
         "Mumbai", "Delhi", "Bangalore", "Hyderabad", "Chennai", "Kolkata", "Pune", "Jaipur",
@@ -64,15 +68,27 @@ public class SpotUIController {
 
     // Home Page
     @GetMapping("/")
-    public String landingPage() {
+    public String landingPage(HttpServletRequest request) {
+        // Check for auto-login via cookie
+        User user = getUserFromCookie(request);
+        if (user != null) {
+            request.getSession().setAttribute("currentUser", user);
+        }
+        
         return "redirect:/home";
     }
 
     // Home Page
     @GetMapping("/home")
-    public String homePage(HttpSession session, Model model) {
+    public String homePage(HttpServletRequest request, Model model) {
+        // Check for auto-login via cookie
+        User user = getUserFromCookie(request);
+        if (user != null) {
+            request.getSession().setAttribute("currentUser", user);
+        }
+        
         // Check if user is logged in
-        User currentUser = (User) session.getAttribute("currentUser");
+        User currentUser = (User) request.getSession().getAttribute("currentUser");
         if (currentUser == null) {
             return "redirect:/login";
         }
@@ -82,9 +98,15 @@ public class SpotUIController {
 
     // Show Login Page
     @GetMapping("/login")
-    public String showLoginPage(HttpSession session, Model model) {
+    public String showLoginPage(HttpServletRequest request, Model model) {
+        // Check for auto-login via cookie
+        User user = getUserFromCookie(request);
+        if (user != null) {
+            request.getSession().setAttribute("currentUser", user);
+        }
+        
         // If already logged in, redirect to home
-        if (session.getAttribute("currentUser") != null) {
+        if (request.getSession().getAttribute("currentUser") != null) {
             return "redirect:/home";
         }
         model.addAttribute("loginDTO", new LoginDTO());
@@ -93,9 +115,15 @@ public class SpotUIController {
 
     // Show Register Page
     @GetMapping("/register")
-    public String showRegisterPage(HttpSession session, Model model) {
+    public String showRegisterPage(HttpServletRequest request, Model model) {
+        // Check for auto-login via cookie
+        User user = getUserFromCookie(request);
+        if (user != null) {
+            request.getSession().setAttribute("currentUser", user);
+        }
+        
         // If already logged in, redirect to home
-        if (session.getAttribute("currentUser") != null) {
+        if (request.getSession().getAttribute("currentUser") != null) {
             return "redirect:/home";
         }
         model.addAttribute("registerDTO", new RegisterDTO());
@@ -103,23 +131,33 @@ public class SpotUIController {
     }
 
     @PostMapping("/register")
-    public String registerUser(@ModelAttribute RegisterDTO registerDTO, Model model, HttpSession session) {
+    public String registerUser(@ModelAttribute RegisterDTO registerDTO, Model model, 
+                              HttpServletRequest request, HttpServletResponse response) {
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             
-            HttpEntity<RegisterDTO> request = new HttpEntity<>(registerDTO, headers);
+            HttpEntity<RegisterDTO> httpRequest = new HttpEntity<>(registerDTO, headers);
             
-            ResponseEntity<User> response = restTemplate.postForEntity(
+            ResponseEntity<User> httpResponse = restTemplate.postForEntity(
                 BASE_URL + "/auth/register", 
-                request, 
+                httpRequest, 
                 User.class
             );
 
-            if (response.getStatusCode().is2xxSuccessful()) {
+            if (httpResponse.getStatusCode().is2xxSuccessful()) {
                 // Automatically log in after successful registration
-                User registeredUser = response.getBody();
+                User registeredUser = httpResponse.getBody();
+                
+                // Set user in session
+                HttpSession session = request.getSession(true);
                 session.setAttribute("currentUser", registeredUser);
+                session.setMaxInactiveInterval(SESSION_TIMEOUT);
+                
+                // Set persistent cookie
+                Cookie loginCookie = createLoginCookie(registeredUser);
+                response.addCookie(loginCookie);
+                
                 return "redirect:/home";
             } else {
                 model.addAttribute("error", "Registration unsuccessful");
@@ -136,23 +174,33 @@ public class SpotUIController {
     }
 
     @PostMapping("/perform_login")
-    public String loginUser(@ModelAttribute LoginDTO loginDTO, Model model, HttpSession session) {
+    public String loginUser(@ModelAttribute LoginDTO loginDTO, Model model,
+                           HttpServletRequest request, HttpServletResponse response) {
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             
-            HttpEntity<LoginDTO> request = new HttpEntity<>(loginDTO, headers);
+            HttpEntity<LoginDTO> httpRequest = new HttpEntity<>(loginDTO, headers);
             
-            ResponseEntity<User> response = restTemplate.postForEntity(
+            ResponseEntity<User> httpResponse = restTemplate.postForEntity(
                 BASE_URL + "/auth/login", 
-                request, 
+                httpRequest, 
                 User.class
             );
 
-            if (response.getStatusCode().is2xxSuccessful()) {
+            if (httpResponse.getStatusCode().is2xxSuccessful()) {
                 // Store user in session
-                User loggedInUser = response.getBody();
+                User loggedInUser = httpResponse.getBody();
+                
+                // Set user in session
+                HttpSession session = request.getSession(true);
                 session.setAttribute("currentUser", loggedInUser);
+                session.setMaxInactiveInterval(SESSION_TIMEOUT);
+                
+                // Set persistent cookie
+                Cookie loginCookie = createLoginCookie(loggedInUser);
+                response.addCookie(loginCookie);
+                
                 return "redirect:/home";
             } else {
                 model.addAttribute("error", "Login unsuccessful");
@@ -170,10 +218,28 @@ public class SpotUIController {
 
     // Logout endpoint
     @GetMapping("/logout")
-    public String logout(HttpSession session) {
+    public String logout(HttpServletRequest request, HttpServletResponse response) {
         // Remove user from session
-        session.removeAttribute("currentUser");
-        session.invalidate();
+        HttpSession session = request.getSession(false);
+        if (session != null) {
+            session.removeAttribute("currentUser");
+            session.invalidate();
+        }
+        
+        // Delete the cookie
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if ("loginInfo".equals(cookie.getName())) {
+                    cookie.setValue("");
+                    cookie.setPath("/");
+                    cookie.setMaxAge(0);
+                    response.addCookie(cookie);
+                    break;
+                }
+            }
+        }
+        
         return "redirect:/login";
     }
 
@@ -182,10 +248,10 @@ public class SpotUIController {
         @ModelAttribute SpotCreateDTO spotCreateDTO, 
         @RequestParam(value = "imageFile", required = false) MultipartFile imageFile,
         Model model, 
-        HttpSession session
+        HttpServletRequest request
     ) {
         // Ensure user is logged in
-        User currentUser = (User) session.getAttribute("currentUser");
+        User currentUser = (User) request.getSession().getAttribute("currentUser");
         if (currentUser == null) {
             return "redirect:/login";
         }
@@ -217,7 +283,7 @@ public class SpotUIController {
 
             ResponseEntity<SpotResponseDTO> response = restTemplate.postForEntity(
                 BASE_URL + "/spots/create",
-                requestEntity,  // Use requestEntity instead of spotCreateDTO
+                requestEntity,
                 SpotResponseDTO.class
             );
 
@@ -239,9 +305,9 @@ public class SpotUIController {
 
     // Show Spot Creation Page
     @GetMapping("/spots/create")
-    public String showCreateSpotPage(Model model, HttpSession session) {
+    public String showCreateSpotPage(Model model, HttpServletRequest request) {
         // Ensure user is logged in
-        User currentUser = (User) session.getAttribute("currentUser");
+        User currentUser = (User) request.getSession().getAttribute("currentUser");
         if (currentUser == null) {
             return "redirect:/login";
         }
@@ -257,9 +323,9 @@ public class SpotUIController {
 
     // Show Spot List Page
     @GetMapping("/spots/list")
-    public String viewAllSpots(Model model, HttpSession session) {
+    public String viewAllSpots(Model model, HttpServletRequest request) {
         // Ensure user is logged in
-        User currentUser = (User) session.getAttribute("currentUser");
+        User currentUser = (User) request.getSession().getAttribute("currentUser");
         if (currentUser == null) {
             return "redirect:/login";
         }
@@ -284,9 +350,9 @@ public class SpotUIController {
         @RequestParam(required = false) VehicleType supportedVehicleType,
         @RequestParam(required = false) SpotStatus status,
         Model model,
-        HttpSession session
+        HttpServletRequest request
     ) {
-        User currentUser = (User) session.getAttribute("currentUser");
+        User currentUser = (User) request.getSession().getAttribute("currentUser");
         if (currentUser == null) {
             return "redirect:/login";
         }
@@ -338,8 +404,8 @@ public class SpotUIController {
     }
 
     @GetMapping("/spots/statistics")
-    public String getSpotStatistics(Model model, HttpSession session) {
-        User currentUser = (User) session.getAttribute("currentUser");
+    public String getSpotStatistics(Model model, HttpServletRequest request) {
+        User currentUser = (User) request.getSession().getAttribute("currentUser");
         if (currentUser == null) {
             return "redirect:/login";
         }
@@ -355,8 +421,8 @@ public class SpotUIController {
 
     // Owner's Spots Page
     @GetMapping("/spots/owner")
-    public String getOwnerSpots(Model model, HttpSession session) {
-        User currentUser = (User) session.getAttribute("currentUser");
+    public String getOwnerSpots(Model model, HttpServletRequest request) {
+        User currentUser = (User) request.getSession().getAttribute("currentUser");
         if (currentUser == null) {
             return "redirect:/login";
         }
@@ -377,6 +443,55 @@ public class SpotUIController {
 
         model.addAttribute("spots", spots);
         return "owner_spots";
+    }
+
+    // Helper methods for persistent login
+    private Cookie createLoginCookie(User user) {
+        // Create a cookie with user ID and a simple encoded credential
+        // In a production app, you would use more secure encoding and possibly JWT
+        String userInfo = user.getId() + ":" + Base64.getEncoder().encodeToString(
+            (user.getPassword()).getBytes());
+        
+        Cookie cookie = new Cookie("loginInfo", userInfo);
+        cookie.setMaxAge(SESSION_TIMEOUT);
+        cookie.setPath("/");
+        cookie.setHttpOnly(true); // Prevent JavaScript access
+        // cookie.setSecure(true); // Uncomment for HTTPS
+        
+        return cookie;
+    }
+    
+    private User getUserFromCookie(HttpServletRequest request) {
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if ("loginInfo".equals(cookie.getName())) {
+                    try {
+                        String value = cookie.getValue();
+                        String[] parts = value.split(":", 2);
+                        
+                        if (parts.length == 2) {
+                            Long userId = Long.parseLong(parts[0]);
+                            
+                            // Use the user ID to fetch fresh user data from the backend
+                            ResponseEntity<User> response = restTemplate.getForEntity(
+                                BASE_URL + "/auth/user/" + userId, 
+                                User.class
+                            );
+                            
+                            if (response.getStatusCode().is2xxSuccessful()) {
+                                return response.getBody();
+                            }
+                        }
+                    } catch (Exception e) {
+                        // Log the error but continue
+                        System.err.println("Error parsing login cookie: " + e.getMessage());
+                    }
+                    break;
+                }
+            }
+        }
+        return null;
     }
 
     public List<String> convertImagesToBase64(List<byte[]> images) {
