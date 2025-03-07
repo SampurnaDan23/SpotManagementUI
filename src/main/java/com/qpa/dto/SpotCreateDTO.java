@@ -19,14 +19,17 @@ public class SpotCreateDTO {
 	private boolean hasEVCharging;
 	private double price;
 	private PriceType priceType;
-	private List<MultipartFile> images;
+	private MultipartFile image;
 	private Set<VehicleType> supportedVehicle;
 	
 	public SpotCreateDTO() {
 
 	}
 
-	public SpotCreateDTO(String spotNumber, SpotType spotType, User owner, LocationDTO location, boolean hasEVCharging, double price, PriceType priceType, List<MultipartFile> images, Set<VehicleType> supportedVehicle) {
+	
+
+	public SpotCreateDTO(String spotNumber, SpotType spotType, User owner, LocationDTO location, boolean hasEVCharging,
+			double price, PriceType priceType, MultipartFile image, Set<VehicleType> supportedVehicle) {
 		this.spotNumber = spotNumber;
 		this.spotType = spotType;
 		this.owner = owner;
@@ -34,9 +37,11 @@ public class SpotCreateDTO {
 		this.hasEVCharging = hasEVCharging;
 		this.price = price;
 		this.priceType = priceType;
-		this.images = images;
+		this.image = image;
 		this.supportedVehicle = supportedVehicle;
 	}
+
+
 
 	public String getSpotNumber() {
 		return spotNumber;
@@ -86,13 +91,7 @@ public class SpotCreateDTO {
 		this.priceType = priceType;
 	}
 
-	public List<MultipartFile> getImages() {
-		return images;
-	}
-
-	public void setImages(List<MultipartFile> images) {
-		this.images = images;
-	}
+	
 
 	public Set<VehicleType> getSupportedVehicle() {
 		return supportedVehicle;
@@ -108,5 +107,17 @@ public class SpotCreateDTO {
 
 	public void setOwner(User owner) {
 		this.owner = owner;
+	}
+
+
+
+	public MultipartFile getImage() {
+		return image;
+	}
+
+
+
+	public void setImage(MultipartFile image) {
+		this.image = image;
 	}
 }

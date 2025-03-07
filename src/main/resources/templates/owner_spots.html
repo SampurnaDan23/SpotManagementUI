@@ -119,8 +119,8 @@
 	        <div th:if="${spots != null and #arrays.length(spots) > 0}" class="row row-cols-1 row-cols-md-3 g-4">
 	            <div th:each="spot : ${spots}" class="col">
 	                <div class="card h-100">
-	                    <img th:if="${spot.spotImagesBase64 != null and not spot.spotImagesBase64.empty}" 
-	                         th:src="@{'data:image/jpeg;base64,' + ${spot.spotImagesBase64[0]}}" 
+	                    <img th:if="${spot.spotImageBase64 != null and not spot.spotImageBase64.empty}" 
+	                         th:src="@{'data:image/jpeg;base64,' + ${spot.spotImageBase64}}" 
 	                         class="card-img-top" alt="Spot Image">
 	                    <div class="card-body">
 	                        <h5 class="card-title" th:text="${spot.spotNumber}">Spot Number</h5>
@@ -132,6 +132,12 @@
 	                        </p>
 	                        <div class="d-flex justify-content-between">
 	                            <a th:href="@{'/spots/edit/' + ${spot.spotId}}" class="btn btn-sm btn-outline-primary">Edit</a>
+                                <button th:onclick="|toggleActivation('${spot.spotId}')|" 
+                                        class="btn btn-sm" 
+                                        th:classappend="${spot.isActive ? 'btn-outline-warning' : 'btn-outline-success'}"
+                                        th:text="${spot.isActive ? 'Deactivate' : 'Activate'}">
+                                        Toggle
+                                </button>
 	                            <button th:onclick="|confirmDelete('${spot.spotId}')|" class="btn btn-sm btn-outline-danger">Delete</button>
 	                        </div>
 	                    </div>
@@ -146,6 +152,24 @@
 	                window.location.href = '/spots/delete/' + spotId;
 	            }
 	        }
+
+            function toggleActivation(spotId) {
+                if (confirm('Are you sure you want to change the activation status of this spot?')) {
+                    fetch('/spots/toggle/' + spotId, {
+                        method: 'POST',
+                    })
+                    .then(response => {
+                        if (response.ok) {
+                            window.location.reload();
+                        } else {
+                            alert('Failed to toggle spot activation. Please try again.');
+                        }
+                    })
+                    .catch(error => {
+                        alert('An error occurred: ' + error);
+                    });
+                }
+            }
 	    </script>
 	    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
 	</body>
