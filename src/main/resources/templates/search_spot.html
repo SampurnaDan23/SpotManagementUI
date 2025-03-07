@@ -155,8 +155,8 @@
         <div th:if="${spots != null and #arrays.length(spots) > 0}" class="row row-cols-1 row-cols-md-3 g-4">
             <div th:each="spot : ${spots}" class="col">
                 <div class="card h-100">
-                    <img th:if="${spot.spotImagesBase64 != null and not spot.spotImagesBase64.empty}" 
-                         th:src="@{'data:image/jpeg;base64,' + ${spot.spotImagesBase64[0]}}" 
+                    <img th:if="${spot.spotImageBase64 != null and not spot.spotImageBase64.empty}" 
+                         th:src="@{'data:image/jpeg;base64,' + ${spot.spotImageBase64}}" 
                          class="card-img-top" alt="Spot Image">
                     <div class="card-body">
                         <h5 class="card-title" th:text="${spot.spotNumber}">Spot Number</h5>

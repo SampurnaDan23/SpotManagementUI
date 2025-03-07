@@ -6,6 +6,7 @@ import java.util.Set;
 import com.qpa.entity.PriceType;
 import com.qpa.entity.SpotStatus;
 import com.qpa.entity.SpotType;
+import com.qpa.entity.User;
 import com.qpa.entity.VehicleType;
 
 public class SpotResponseDTO {
@@ -13,36 +14,43 @@ public class SpotResponseDTO {
 	private String spotNumber;
 	private SpotType spotType;
 	private SpotStatus status;
+	private boolean isActive;
+	private User owner;
 	private LocationDTO location;
 	private boolean hasEVCharging;
 	private double price;
 	private PriceType priceType;
 	private Double rating;
-	private List<byte[]> spotImages;
+	private byte[] spotImage;
 	private Set<VehicleType> supportedVehicleTypes;
-	private List<String> spotImagesBase64;
+	private String spotImageBase64;
 	
 	public SpotResponseDTO() {
 
 	}
 
-	public SpotResponseDTO(Long spotId, String spotNumber, SpotType spotType, SpotStatus status, LocationDTO location,
-			boolean hasEVCharging, double price, PriceType priceType, Double rating,
-			List<byte[]> spotImages, Set<VehicleType> supportedVehicleTypes, List<String> spotImagesBase64) {
-		super();
+	
+
+	public SpotResponseDTO(Long spotId, String spotNumber, SpotType spotType, SpotStatus status, User owner,
+			LocationDTO location, boolean hasEVCharging, double price, PriceType priceType, Double rating,
+			byte[] spotImage, Set<VehicleType> supportedVehicleTypes, String spotImageBase64, boolean isActive) {
 		this.spotId = spotId;
 		this.spotNumber = spotNumber;
 		this.spotType = spotType;
 		this.status = status;
+		this.owner = owner;
 		this.location = location;
 		this.hasEVCharging = hasEVCharging;
 		this.price = price;
 		this.priceType = priceType;
 		this.rating = rating;
-		this.spotImages = spotImages;
+		this.spotImage = spotImage;
 		this.supportedVehicleTypes = supportedVehicleTypes;
-		this.spotImagesBase64 = spotImagesBase64;
+		this.spotImageBase64 = spotImageBase64;
+		this.isActive = isActive;
 	}
+
+
 
 	public Long getSpotId() {
 		return spotId;
@@ -114,15 +122,7 @@ public class SpotResponseDTO {
 
 	public void setRating(Double rating) {
 		this.rating = rating;
-	}
-
-	public List<byte[]> getSpotImages() {
-		return spotImages;
-	}
-
-	public void setSpotImages(List<byte[]> spotImages) {
-		this.spotImages = spotImages;
-	}
+	}	
 
 	public Set<VehicleType> getSupportedVehicleTypes() {
 		return supportedVehicleTypes;
@@ -132,11 +132,45 @@ public class SpotResponseDTO {
 		this.supportedVehicleTypes = supportedVehicleTypes;
 	}
 
-	public List<String> getSpotImagesBase64() {
-		return spotImagesBase64;
+	public User getOwner() {
+		return owner;
 	}
 
-	public void setSpotImagesBase64(List<String> spotImagesBase64) {
-		this.spotImagesBase64 = spotImagesBase64;
+	public void setOwner(User owner) {
+		this.owner = owner;
 	}
+
+	public byte[] getSpotImage() {
+		return spotImage;
+	}
+
+	public void setSpotImage(byte[] spotImage) {
+		this.spotImage = spotImage;
+	}
+
+
+
+	public String getSpotImageBase64() {
+		return spotImageBase64;
+	}
+
+
+
+	public void setSpotImageBase64(String spotImageBase64) {
+		this.spotImageBase64 = spotImageBase64;
+	}
+
+
+
+	public boolean getIsActive() {
+		return isActive;
+	}
+
+
+
+	public void setIsActive(boolean isActive) {
+		this.isActive = isActive;
+	}
+
+	
 }
