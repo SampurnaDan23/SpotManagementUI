@@ -19,6 +19,7 @@ public class Spot {
 	
 	private SpotType spotType;
 	
+	private boolean isActive;
 	
 	private SpotStatus status;
 	
@@ -39,7 +40,7 @@ public class Spot {
     private LocalDateTime updatedAt;
     
    
-    private List<byte[]> spotImages;
+    private byte[] spotImage;
     
     
     private Set<VehicleType> supportedVehicleTypes; // no set
@@ -61,8 +62,8 @@ public class Spot {
 
 	public Spot(Long spotId, String spotNumber, SpotType spotType, SpotStatus status, Location location,
 			boolean hasEVCharging, double price, PriceType priceType, Double rating,
-			LocalDateTime createdAt, LocalDateTime updatedAt, List<byte[]> spotImages,
-			Set<VehicleType> supportedVehicleTypes) {
+			LocalDateTime createdAt, LocalDateTime updatedAt, byte[] spotImage,
+			Set<VehicleType> supportedVehicleTypes, boolean isActive) {
 		super();
 		this.spotId = spotId;
 		this.spotNumber = spotNumber;
@@ -75,8 +76,9 @@ public class Spot {
 		this.rating = rating;
 		this.createdAt = createdAt;
 		this.updatedAt = updatedAt;
-		this.spotImages = spotImages;
+		this.spotImage = spotImage;
 		this.supportedVehicleTypes = supportedVehicleTypes;
+		this.isActive = isActive;
 	}
 
 	public Long getSpotId() {
@@ -159,13 +161,6 @@ public class Spot {
 		this.createdAt = createdAt;
 	}
 	
-	public List<byte[]> getSpotImages() {
-		return spotImages;
-	}
-
-	public void setSpotImages(List<byte[]> spotImages) {
-		this.spotImages = spotImages;
-	}
 
 	public LocalDateTime getUpdatedAt() {
 		return updatedAt;
@@ -194,4 +189,25 @@ public class Spot {
 	public boolean isHasEVCharging() {
 		return hasEVCharging;
 	}
+
+
+	public byte[] getSpotImage() {
+		return spotImage;
+	}
+
+
+	public void setSpotImage(byte[] spotImage) {
+		this.spotImage = spotImage;
+	}
+
+
+	public boolean getIsActive() {
+		return isActive;
+	}
+
+
+	public void setIsActive(boolean isActive) {
+		this.isActive = isActive;
+	}
+	
 }
