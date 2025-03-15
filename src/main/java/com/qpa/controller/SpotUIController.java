@@ -592,10 +592,14 @@ public class SpotUIController {
         }
     }
 
-    @PostMapping("/spots/toggle/{spotId}")
+    @GetMapping(value="/spots/toggle")
+
     public String toggleSpotActivation(
-        @PathVariable Long spotId,
+
+        @RequestParam Long spotId,
+
         HttpServletRequest request
+
     ) {
         // Ensure user is logged in
         User currentUser = (User) request.getSession().getAttribute("currentUser");
@@ -606,12 +610,16 @@ public class SpotUIController {
         try {
             // Call the backend API to toggle spot activation
             ResponseEntity<SpotResponseDTO> response = restTemplate.exchange(
-                BASE_URL + "/spots/" + spotId,
-                HttpMethod.PATCH,
-                null,
-                SpotResponseDTO.class
-            );
-            
+
+                    BASE_URL + "/spots/toggle/" + spotId,
+
+                    HttpMethod.PUT,
+
+                    null,
+
+                    SpotResponseDTO.class
+
+                );
             if (response.getStatusCode().is2xxSuccessful()) {
                 return "redirect:/spots/owner?success=statusToggled";
             } else {
