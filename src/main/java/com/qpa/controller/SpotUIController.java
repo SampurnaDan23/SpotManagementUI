@@ -682,4 +682,50 @@ public class SpotUIController {
     public String convertImageToBase64(byte[] image) {   
         return Base64.getEncoder().encodeToString(image);
     }
+    
+    @GetMapping("/spots/by-booking")
+    public String getSpotByBookingIdPage(@RequestParam(required = false) Long bookingId, Model model, HttpServletRequest request) {
+        System.out.println("Navigating to search spot by Booking ID page. Booking ID: " + bookingId);
+
+        User currentUser = (User) request.getSession().getAttribute("currentUser");
+        if (currentUser == null) {
+            return "redirect:/login";
+        }
+
+        if (bookingId == null) {
+            return "search_spot_bookingId";
+        }
+
+        try {
+            String url = BASE_URL + "/spots/by-booking/" + bookingId;
+            System.out.println("Calling backend API: " + url);
+
+            ResponseEntity<SpotResponseDTO> response = restTemplate.exchange(
+                url, HttpMethod.GET, null, SpotResponseDTO.class);
+
+            SpotResponseDTO spot = response.getBody();
+
+            if (spot != null) {
+                System.out.println("Spot found: " + spot.getSpotNumber());
+
+                if (spot.getSpotImage() != null) {
+                    String base64Image = "data:image/png;base64," + convertImageToBase64(spot.getSpotImage());
+                    spot.setSpotImageBase64(base64Image);
+                    System.out.println("Spot image converted to Base64.");
+                }
+            }
+
+            model.addAttribute("spot", spot);
+        } catch (HttpClientErrorException.NotFound ex) {
+            System.out.println("Error: " + ex.getResponseBodyAsString());
+            model.addAttribute("errorMessage", "No spot found for booking ID: " + bookingId);
+        } catch (Exception e) {
+            System.out.println("Unexpected error: " + e.getMessage());
+            model.addAttribute("errorMessage", "An error occurred while fetching spot details.");
+        }
+
+        return "search_spot_bookingId";
+    }
+
+
 }
