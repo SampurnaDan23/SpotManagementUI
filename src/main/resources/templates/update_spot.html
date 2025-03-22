@@ -126,7 +126,13 @@
                 <label class="form-label">Current Image</label>
                 <div class="d-flex flex-wrap">
                     <div class="image-container">
-                        <img th:src="@{'data:image/jpeg;base64,' + ${spot.spotImageBase64}}" class="image-preview" alt="Spot Image">
+                        <img th:if="${spot.spotImage != null and not #strings.isEmpty(spot.spotImage)}" 
+                      th:src="${spot.spotImage}" 
+                      alt="Spot Image">
+
+                        <img th:unless="${spot.spotImage != null and not #strings.isEmpty(spot.spotImage)}"
+                            src="/images/default-parking.jpg"
+                            alt="Default Parking Image">
                     </div>
                 </div>
             </div>

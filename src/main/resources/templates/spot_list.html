@@ -118,38 +118,39 @@
 </head>
 <body>
 
-   <div th:replace="~{fragments/navbarLanding :: navbarLanding}"></div>
+    <div th:replace="~{fragments/navbarLanding :: navbarLanding}"></div>
+ 
+     <div class="available-spots-container">
+         <h1><b>Available Spots</b></h1>
+ 
+         <div th:if="${spots != null and #arrays.length(spots) > 0}" class="spots-grid">
+             <div th:each="spot : ${spots}" class="spot-card">
+                 <img th:if="${spot.spotImage != null and not #strings.isEmpty(spot.spotImage)}" 
+                      th:src="${spot.spotImage}" 
+                      alt="Spot Image">
 
-    <div class="available-spots-container">
-        <h1><b>Available Spots</b></h1>
+                 <img th:unless="${spot.spotImage != null and not #strings.isEmpty(spot.spotImage)}"
+                      src="/images/default-parking.jpg"
+                      alt="Default Parking Image">
 
-        <div th:if="${spots != null and #arrays.length(spots) > 0}" class="spots-grid">
-            <div th:each="spot : ${spots}" class="spot-card">
-                <!-- Parking Spot Image -->
-                <img th:if="${spot.spotImageBase64 != null and not spot.spotImageBase64.empty}" 
-                     th:src="@{'data:image/jpeg;base64,' + ${spot.spotImageBase64}}" 
-                     alt="Spot Image">
+                 <div class="spot-info">
+                     <h3 th:text="${spot.spotNumber}">Spot Number</h3>
+                     <p><strong>Location:</strong> 
+                        <span th:text="${spot.location.city + ', ' + spot.location.streetAddress}"></span>
+                     </p>
+                     <p><strong>Price:</strong> 
+                        <span th:text="${spot.price + ' ' + spot.priceType}"></span>
+                     </p>
+                     <p><strong>EV Charging:</strong> 
+                        <span th:text="${spot.hasEVCharging ? 'Yes' : 'No'}"></span>
+                     </p>
+                 </div>
+             </div>
+         </div>
 
-                <!-- Spot Details -->
-                <div class="spot-info">
-                    <h3 th:text="${spot.spotNumber}">Spot Number</h3>
-                    <p><strong>Location:</strong> 
-                       <span th:text="${spot.location.city + ', ' + spot.location.streetAddress}"></span>
-                    </p>
-                    <p><strong>Price:</strong> 
-                       <span th:text="${spot.price + ' ' + spot.priceType}"></span>
-                    </p>
-                    <p><strong>EV Charging:</strong> 
-                       <span th:text="${spot.hasEVCharging ? 'Yes' : 'No'}"></span>
-                    </p>
-                </div>
-            </div>
-        </div>
-
-        <!-- No Spots Available Message -->
-        <div th:if="${#arrays.isEmpty(spots)}" class="no-spots">
-            <p>No spots available.</p>
-        </div>
-    </div>
-</body>
+         <div th:if="${#arrays.isEmpty(spots)}" class="no-spots">
+             <p>No spots available.</p>
+         </div>
+     </div>
+ </body>
 </html>

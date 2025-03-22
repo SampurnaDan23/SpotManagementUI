@@ -319,19 +319,12 @@ public class SpotUIController {
     // Show Spot List Page
     @GetMapping("/spots/list")
     public String viewAllSpots(Model model, HttpServletRequest request) {
-        // Ensure user is logged in
         User currentUser = (User) request.getSession().getAttribute("currentUser");
         if (currentUser == null) {
             return "redirect:/login";
         }
 
         SpotResponseDTO[] spots = restTemplate.getForObject(BASE_URL + "/spots/all", SpotResponseDTO[].class);
-
-        for (SpotResponseDTO spot : spots) {
-            if (spot.getSpotImage() != null) {
-                spot.setSpotImageBase64(convertImageToBase64(spot.getSpotImage()));
-            }
-        }
 
         model.addAttribute("spots", spots);
         return "spot_list";
@@ -380,15 +373,6 @@ public class SpotUIController {
         );
 
         SpotResponseDTO[] spots = response.getBody();
-
-        // Convert images to Base64
-        if (spots != null) {
-            for (SpotResponseDTO spot : spots) {
-                if (spot.getSpotImage() != null) {
-                    spot.setSpotImageBase64(convertImageToBase64(spot.getSpotImage()));
-                }
-            }
-        }
         
         model.addAttribute("spots", spots);
         model.addAttribute("spotTypes", SpotType.values());
@@ -427,15 +411,6 @@ public class SpotUIController {
             SpotResponseDTO[].class
         );
 
-        // Convert images to Base64
-        if (spots != null) {
-            for (SpotResponseDTO spot : spots) {
-                if (spot.getSpotImage() != null) {
-                    spot.setSpotImageBase64(convertImageToBase64(spot.getSpotImage()));
-                }
-            }
-        }
-
         model.addAttribute("spots", spots);
         return "owner_spots";
     }
@@ -460,10 +435,7 @@ public class SpotUIController {
             if (response.getStatusCode().is2xxSuccessful()) {
                 SpotResponseDTO spot = response.getBody();
                 
-                // Convert spot images to base64 for display
-                if (spot.getSpotImage() != null) {
-                    spot.setSpotImageBase64(convertImageToBase64(spot.getSpotImage()));
-                }
+                // No need to convert images to base64 for display
                 
                 // Check if the current user is the owner of this spot
                 if (!spot.getOwner().getId().equals(currentUser.getId())) {
@@ -678,7 +650,7 @@ public class SpotUIController {
         }
         return null;
     }
-    
+
     @GetMapping("/booked")
     public String getBookedSpots(Model model, HttpServletRequest request) {
         User currentUser = (User) request.getSession().getAttribute("currentUser");
@@ -709,7 +681,7 @@ public class SpotUIController {
         return "booked_spots_list";
     }
 
-    
+
     @GetMapping("/spots/by-booking")
     public String getSpotByBookingIdPage(@RequestParam(required = false) Long bookingId, Model model, HttpServletRequest request) {
         System.out.println("Navigating to search spot by Booking ID page. Booking ID: " + bookingId);
@@ -734,12 +706,7 @@ public class SpotUIController {
 
             if (spot != null) {
                 System.out.println("Spot found: " + spot.getSpotNumber());
-
-                if (spot.getSpotImage() != null) {
-                    String base64Image = "data:image/png;base64," + convertImageToBase64(spot.getSpotImage());
-                    spot.setSpotImageBase64(base64Image);
-                    System.out.println("Spot image converted to Base64.");
-                }
+                // No need to convert image to Base64
             }
 
             model.addAttribute("spot", spot);
@@ -752,10 +719,6 @@ public class SpotUIController {
         }
 
         return "search_spot_bookingId";
-    }
-    
-    public String convertImageToBase64(byte[] image) {   
-        return Base64.getEncoder().encodeToString(image);
     }
 
 

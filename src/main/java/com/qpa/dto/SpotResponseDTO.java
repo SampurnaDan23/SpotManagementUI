@@ -21,7 +21,7 @@ public class SpotResponseDTO {
 	private double price;
 	private PriceType priceType;
 	private Double rating;
-	private byte[] spotImage;
+	private String spotImage;
 	private Set<VehicleType> supportedVehicleTypes;
 	private String spotImageBase64;
 	
@@ -33,7 +33,7 @@ public class SpotResponseDTO {
 
 	public SpotResponseDTO(Long spotId, String spotNumber, SpotType spotType, SpotStatus status, User owner,
 			LocationDTO location, boolean hasEVCharging, double price, PriceType priceType, Double rating,
-			byte[] spotImage, Set<VehicleType> supportedVehicleTypes, String spotImageBase64, boolean isActive) {
+			String spotImage, Set<VehicleType> supportedVehicleTypes, String spotImageBase64, boolean isActive) {
 		this.spotId = spotId;
 		this.spotNumber = spotNumber;
 		this.spotType = spotType;
@@ -140,37 +140,28 @@ public class SpotResponseDTO {
 		this.owner = owner;
 	}
 
-	public byte[] getSpotImage() {
+
+	public String getSpotImage() {
 		return spotImage;
 	}
 
-	public void setSpotImage(byte[] spotImage) {
+	public void setSpotImage(String spotImage) {
 		this.spotImage = spotImage;
 	}
-
-
 
 	public String getSpotImageBase64() {
 		return spotImageBase64;
 	}
 
-
-
 	public void setSpotImageBase64(String spotImageBase64) {
 		this.spotImageBase64 = spotImageBase64;
 	}
-
-
 
 	public boolean getIsActive() {
 		return isActive;
 	}
 
-
-
 	public void setIsActive(boolean isActive) {
 		this.isActive = isActive;
 	}
-
-	
 }
