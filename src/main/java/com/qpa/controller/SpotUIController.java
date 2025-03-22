@@ -678,10 +678,37 @@ public class SpotUIController {
         }
         return null;
     }
+    
+    @GetMapping("/booked")
+    public String getBookedSpots(Model model, HttpServletRequest request) {
+        User currentUser = (User) request.getSession().getAttribute("currentUser");
+        if (currentUser == null) {
+            return "redirect:/login";
+        }
 
-    public String convertImageToBase64(byte[] image) {   
-        return Base64.getEncoder().encodeToString(image);
+        String url = BASE_URL + "/spots/booked";
+
+        ResponseEntity<SpotResponseDTO[]> response = restTemplate.exchange(
+            url,
+            HttpMethod.GET,
+            null,
+            SpotResponseDTO[].class
+        );
+
+        SpotResponseDTO[] bookedSpots = response.getBody();
+
+        if (bookedSpots != null) {
+            for (SpotResponseDTO spot : bookedSpots) {
+                if (spot.getSpotImage() != null) {
+                    spot.setSpotImageBase64(convertImageToBase64(spot.getSpotImage()));
+                }
+            }
+        }
+
+        model.addAttribute("bookedSpots", bookedSpots);
+        return "booked_spots_list";
     }
+
     
     @GetMapping("/spots/by-booking")
     public String getSpotByBookingIdPage(@RequestParam(required = false) Long bookingId, Model model, HttpServletRequest request) {
@@ -725,6 +752,10 @@ public class SpotUIController {
         }
 
         return "search_spot_bookingId";
+    }
+    
+    public String convertImageToBase64(byte[] image) {   
+        return Base64.getEncoder().encodeToString(image);
     }
 
 
