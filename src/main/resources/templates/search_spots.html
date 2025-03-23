@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Search Parking Spots</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <style>
+        /* General Styling */
+        body {
+            background-color: #f0f2f5;
+            font-family: 'Poppins', 'Arial', sans-serif;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            padding: 20px;
+        }
+
+        /* Header Section */
+        .search-header {
+            margin-bottom: 1.5rem;
+            text-align: center;
+            position: relative;
+        }
+
+        .search-header h2 {
+            font-weight: 700;
+            color: #0052cc;
+            margin-bottom: 1rem;
+            font-size: 2.2rem;
+        }
+
+        .search-header p {
+            color: #536b8a;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Search Bar & Filters */
+        .search-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            padding: 20px;
+            margin-bottom: 2rem;
+            transition: all 0.3s ease;
+        }
+
+        .filter-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .filter-item {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .advanced-filters {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 15px;
+            margin-top: 15px;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .filter-toggle {
+            background: none;
+            border: none;
+            color: #0052cc;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 8px 12px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin: 10px 0 0;
+            transition: background 0.2s;
+        }
+
+        .filter-toggle:hover {
+            background: rgba(0, 82, 204, 0.05);
+        }
+
+        .filter-toggle i {
+            transition: transform 0.3s;
+        }
+
+        /* Form elements */
+        .form-label {
+            font-weight: 600;
+            color: #536b8a;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+
+        .form-select, .form-control {
+            border: 1px solid #e1e5eb;
+            border-radius: 10px;
+            padding: 10px;
+            font-size: 0.95rem;
+            box-shadow: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-select:focus, .form-control:focus {
+            border-color: #0052cc;
+            box-shadow: 0 0 0 3px rgba(0, 82, 204, 0.1);
+        }
+
+        /* Buttons */
+        .btn-primary {
+            background-color: #0052cc;
+            border: none;
+            border-radius: 10px;
+            padding: 12px 24px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .btn-primary:hover {
+            background-color: #0043a6;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 82, 204, 0.2);
+        }
+
+        .btn-secondary {
+            background-color: #f0f2f5;
+            border: 1px solid #dadce0;
+            color: #536b8a;
+            border-radius: 10px;
+            padding: 10px 18px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .btn-secondary:hover {
+            background-color: #e1e5eb;
+            color: #333;
+        }
+
+        /* Cards Layout */
+        .parking-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            border: none;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s, box-shadow 0.3s;
+            height: auto;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12);
+        }
+
+        .card-img-wrapper {
+            height: 160px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .card-img-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s;
+        }
+
+        .card:hover .card-img-wrapper img {
+            transform: scale(1.05);
+        }
+
+        .status-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            z-index: 1;
+        }
+
+        .status-available {
+            background-color: #e3fcef;
+            color: #00875a;
+        }
+
+        .status-occupied {
+            background-color: #ffebe6;
+            color: #de350b;
+        }
+
+        .card-body {
+            padding: 16px;
+        }
+
+        .card-title {
+            font-weight: 700;
+            color: #0052cc;
+            font-size: 1.2rem;
+            margin-bottom: 8px;
+        }
+
+        .card-info {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+        }
+
+        .info-item i {
+            color: #536b8a;
+            width: 16px;
+            text-align: center;
+        }
+
+        .price-tag {
+            font-weight: 700;
+            color: #0052cc;
+            font-size: 1.1rem;
+            margin-top: 10px;
+            display: block;
+        }
+
+        .no-results {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .no-results i {
+            font-size: 48px;
+            color: #536b8a;
+            margin-bottom: 16px;
+        }
+
+        .no-results h4 {
+            color: #0052cc;
+            margin-bottom: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .filter-container {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .filter-item {
+                min-width: 100%;
+            }
+            .btn-group {
+                flex-direction: column;
+                width: 100%;
+            }
+            .btn-group .btn {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+        }
+
+        .select2-container--default .select2-selection--single {
+            height: 44px;
+            border: 1px solid #e1e5eb;
+            border-radius: 10px;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            line-height: 44px;
+            padding-left: 15px;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 44px;
+        }
+
+        .select2-dropdown {
+            border: 1px solid #e1e5eb;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <div th:replace="~{fragments/navbarLanding :: navbarLanding}"></div>
+    
+    <div class="container mt-4">
+        <div class="search-container">
+            <form th:action="@{/spots/search}" method="get" id="searchForm">
+                <div class="filter-container">
+                    <div class="filter-item">
+                        <label class="form-label">Select City</label>
+                        <select name="city" id="citySelect" class="form-select">
+                            <option value="">Select City</option>
+                            <option th:each="city : ${cities}" 
+                                    th:value="${city}" 
+                                    th:text="${city}"
+                                    th:selected="${param.city == city}">
+                            </option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-item d-none d-md-block">
+                        <label class="form-label">Spot Type</label>
+                        <select name="spotType" class="form-select">
+                            <option value="">All Types</option>
+                            <option th:each="type : ${spotTypes}" 
+                                    th:value="${type}" 
+                                    th:text="${type}"
+                                    th:selected="${param.spotType == type}">
+                            </option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-item">
+                        <label class="form-label">&nbsp;</label>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-search me-2"></i> Find Spots
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="text-center">
+                    <button type="button" id="advancedFilterToggle" class="filter-toggle">
+                        <i class="fas fa-sliders-h me-1"></i> Advanced Filters
+                        <i class="fas fa-chevron-down ms-1" id="toggleIcon"></i>
+                    </button>
+                </div>
+                
+                <div class="advanced-filters" id="advancedFilters" style="display: none;">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">EV Charging</label>
+                            <select name="hasEVCharging" class="form-select">
+                                <option value="">All</option>
+                                <option value="true" th:selected="${param.hasEVCharging == 'true'}">Yes</option>
+                                <option value="false" th:selected="${param.hasEVCharging == 'false'}">No</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <label class="form-label">Vehicle Type</label>
+                            <select name="supportedVehicleType" class="form-select">
+                                <option value="">All Vehicles</option>
+                                <option th:each="type : ${vehicleTypes}" 
+                                        th:value="${type}" 
+                                        th:text="${type}"
+                                        th:selected="${param.supportedVehicleType == type}">
+                                </option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-4 d-md-none">
+                            <label class="form-label">Spot Type</label>
+                            <select name="spotType" class="form-select mobile-filter">
+                                <option value="">All Types</option>
+                                <option th:each="type : ${spotTypes}" 
+                                        th:value="${type}" 
+                                        th:text="${type}"
+                                        th:selected="${param.spotType == type}">
+                                </option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-4 d-md-none">
+                            <label class="form-label">Availability</label>
+                            <select name="status" class="form-select mobile-filter">
+                                <option value="">Any</option>
+                                <option th:each="st : ${status}" 
+                                        th:value="${st}" 
+                                        th:text="${st}"
+                                        th:selected="${param.status == st}">
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-3 d-flex justify-content-center flex-wrap gap-2">
+                    <a href="/spots/by-booking" class="btn btn-secondary">
+                        <i class="fas fa-ticket-alt me-1"></i> Search by Booking ID
+                    </a>
+                    <a href="/booked" class="btn btn-secondary">
+                        <i class="fas fa-history me-1"></i> All Booked Spots
+                    </a>
+                    <a href="/spots/search-by-date" class="btn btn-secondary">
+                        <i class="fa-solid fa-calendar-days"></i> Search By Start and End Date
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Results Section -->
+        <div th:if="${spots != null and #arrays.length(spots) > 0}" class="parking-grid">
+            <div th:each="spot : ${spots}" class="parking-spot">
+                <div class="card">
+                    <div class="card-img-wrapper">
+                        <div th:class="${spot.status == 'AVAILABLE' ? 'status-badge status-available' : 'status-badge status-occupied'}" 
+                             th:text="${spot.status}">
+                        </div>
+                        <img th:if="${spot.spotImage != null and not #strings.isEmpty(spot.spotImage)}" 
+                              th:src="${spot.spotImage}" 
+                              alt="Spot Image">
+                        <img th:unless="${spot.spotImage != null and not #strings.isEmpty(spot.spotImage)}"
+                            src="/images/default-parking.jpg"
+                            alt="Default Parking Image">
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title" th:text="${spot.spotNumber}">Spot Number</h5>
+                        <div class="card-info">
+                            <div class="info-item">
+                                <i class="fas fa-map-marker-alt"></i>
+                                <span th:text="${spot.location.city + ', ' + spot.location.streetAddress}"></span>
+                            </div>
+                            <div class="info-item">
+                                <i class="fas fa-charging-station"></i>
+                                <span th:text="${spot.hasEVCharging ? 'EV Charging Available' : 'No EV Charging'}"></span>
+                            </div>
+                            <span class="price-tag" th:text="${'₹'+spot.price + ' ' + spot.priceType}"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div th:if="${spots == null or #arrays.length(spots) == 0}" class="no-results">
+            <i class="fas fa-search"></i>
+            <h4>No matching spots found</h4>
+            <p>Try adjusting your filters or search in a different area.</p>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#citySelect').select2({
+                placeholder: "Search for a city",
+                allowClear: true,
+                width: '100%'
+            });
+            
+            $('#advancedFilterToggle').click(function() {
+                $('#advancedFilters').slideToggle(300);
+                $('#toggleIcon').toggleClass('fa-chevron-down fa-chevron-up');
+            });
+
+            $('.mobile-filter').on('change', function() {
+                const name = $(this).attr('name');
+                $(`select[name="${name}"]:not(.mobile-filter)`).val($(this).val());
+            });
+            
+            $('select:not(.mobile-filter)').on('change', function() {
+                const name = $(this).attr('name');
+                $(`.mobile-filter[name="${name}"]`).val($(this).val());
+            });
+            
+            const observerOptions = {
+                threshold: 0.1
+            };
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('animated');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, observerOptions);
+            
+            document.querySelectorAll('.parking-spot').forEach(spot => {
+                observer.observe(spot);
+            });
+        });
+    </script>
+</body>
+</html>
