@@ -51,8 +51,8 @@ public class SpotUIController {
     @Autowired
     private RestTemplate restTemplate;
 
-    private final String BASE_URL = "http://localhost:8080/api"; 
-    private final int SESSION_TIMEOUT = 60 * 60 * 24 * 7; 
+    private final String BASE_URL = "http://localhost:8080/api";
+    private final int SESSION_TIMEOUT = 60 * 60 * 24 * 7;
 
     // City list
     private List<String> cities = List.of(
@@ -218,7 +218,6 @@ public class SpotUIController {
             put("Rewa", "486001");
         }
     };
-    
 
     // Home Page
     @GetMapping("/")
@@ -643,23 +642,48 @@ public class SpotUIController {
             @RequestParam Long userId,
             Model model,
             HttpServletRequest request) {
-        // Ensure user is logged in
+
         User currentUser = (User) request.getSession().getAttribute("currentUser");
         if (currentUser == null) {
             return "redirect:/login";
         }
 
-        // Verify the user is authorized to update this spot
         if (!userId.equals(currentUser.getId())) {
             return "redirect:/spots/owner?error=unauthorized";
         }
 
         try {
-            // Prepare multipart request
+            ResponseEntity<SpotResponseDTO> currentSpotResponse = restTemplate.getForEntity(
+                    BASE_URL + "/spots/" + spotId,
+                    SpotResponseDTO.class);
+
+            if (currentSpotResponse.getStatusCode().is2xxSuccessful()) {
+                SpotResponseDTO currentSpot = currentSpotResponse.getBody();
+
+                if (spotCreateDTO.getSpotType() == null) {
+                    spotCreateDTO.setSpotType(currentSpot.getSpotType());
+                }
+
+                if (spotCreateDTO.getLocation() == null) {
+                    spotCreateDTO.setLocation(currentSpot.getLocation());
+                } else {
+                    if (spotCreateDTO.getLocation().getCity() == null) {
+                        spotCreateDTO.getLocation().setCity(currentSpot.getLocation().getCity());
+                    }
+                    if (spotCreateDTO.getLocation().getState() == null) {
+                        spotCreateDTO.getLocation().setState(currentSpot.getLocation().getState());
+                    }
+                    if (spotCreateDTO.getLocation().getPincode() == null) {
+                        spotCreateDTO.getLocation().setPincode(currentSpot.getLocation().getPincode());
+                    }
+                    if (spotCreateDTO.getLocation().getLandmark() == null) {
+                        spotCreateDTO.getLocation().setLandmark(currentSpot.getLocation().getLandmark());
+                    }
+                }
+            }
+
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-
-            // Add image if provided
             MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
             body.add("spot", spotCreateDTO);
             body.add("userId", userId);
@@ -671,7 +695,6 @@ public class SpotUIController {
 
             HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
 
-            // Send update request to backend
             ResponseEntity<SpotResponseDTO> response = restTemplate.exchange(
                     BASE_URL + "/spots/" + spotId,
                     HttpMethod.PUT,
@@ -926,7 +949,7 @@ public class SpotUIController {
                 model.addAttribute("spotsFound", false);
             }
         } else {
-            model.addAttribute("spotsFound", null); 
+            model.addAttribute("spotsFound", null);
         }
 
         model.addAttribute("spots", spots);

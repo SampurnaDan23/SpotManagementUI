@@ -634,7 +634,7 @@
                 </div>
 
                 <div class="form-group" id="priceContainer">
-                  <label for="price">Price ($)</label>
+                  <label for="price">Price (₹)</label>
                   <input
                     type="number"
                     id="price"
@@ -912,9 +912,8 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script th:inline="javascript">
-      // Store mappings as JavaScript objects
-      const stateCityMap = /*[[${stateCityMap}]]*/ {};
-      const cityPincodeMap = /*[[${cityPincodeMap}]]*/ {};
+      const stateCityMap = {};
+      const cityPincodeMap = {};
 
       function initImageUpload() {
         const imageUploadContainer = document.getElementById(
