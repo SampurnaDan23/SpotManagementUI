@@ -1,5 +1,6 @@
 package com.qpa.entity;
 
+import java.util.Set;
 
 public class Location {
 	
@@ -17,10 +18,10 @@ public class Location {
 	private int floorNumber;
 	
 	
-	private Spot spot;
+	private Set<Spot> spots;
 
 	public Location(Long locationId, double latitude, double longitude, String buildingName, String streetAddress,
-			String area, String city, String state, String pincode, int floorNumber, Spot spot, String landmark) {
+			String area, String city, String state, String pincode, int floorNumber, Set<Spot> spots, String landmark) {
 		super();
 		this.locationId = locationId;
 		this.latitude = latitude;
@@ -32,7 +33,7 @@ public class Location {
 		this.state = state;
 		this.pincode = pincode;
 		this.floorNumber = floorNumber;
-		this.spot = spot;
+		this.spots = spots;
 		this.landmark = landmark;
 	}
 
@@ -120,12 +121,12 @@ public class Location {
 		this.floorNumber = floorNumber;
 	}
 
-	public Spot getSpot() {
-		return spot;
+	public Set<Spot> getSpot() {
+		return spots;
 	}
 
-	public void setSpot(Spot spot) {
-		this.spot = spot;
+	public void setSpot(Set<Spot> spots) {
+		this.spots = spots;
 	}
 
 	public String getLandmark() {

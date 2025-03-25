@@ -1,6 +1,8 @@
 package com.qpa.controller;
 
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -23,6 +25,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.qpa.dto.SpotCreateDTO;
 import com.qpa.dto.SpotResponseDTO;
 import com.qpa.dto.SpotStatistics;
+import com.qpa.dto.LocationDTO;
 import com.qpa.dto.LoginDTO;
 import com.qpa.dto.RegisterDTO;
 import com.qpa.entity.PriceType;
@@ -40,9 +43,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Controller
@@ -53,171 +57,7 @@ public class SpotUIController {
 
     private final String BASE_URL = "http://localhost:8080/api";
     private final int SESSION_TIMEOUT = 60 * 60 * 24 * 7;
-
-    // City list
-    private List<String> cities = List.of(
-            "Mumbai", "Delhi", "Bangalore", "Hyderabad", "Chennai", "Kolkata", "Pune", "Jaipur",
-            "Ahmedabad", "Lucknow", "Kanpur", "Nagpur", "Indore", "Thane", "Bhopal", "Visakhapatnam",
-            "Patna", "Vadodara", "Ghaziabad", "Ludhiana", "Agra", "Nashik", "Faridabad", "Meerut",
-            "Rajkot", "Varanasi", "Srinagar", "Aurangabad", "Dhanbad", "Amritsar", "Allahabad",
-            "Ranchi", "Coimbatore", "Jabalpur", "Gwalior", "Vijayawada", "Jodhpur", "Madurai",
-            "Raipur", "Kota", "Guwahati", "Chandigarh", "Solapur", "Hubli–Dharwad", "Bareilly",
-            "Moradabad", "Mysore", "Tiruchirappalli", "Tiruppur", "Dehradun", "Jalandhar",
-            "Aligarh", "Bhubaneswar", "Salem", "Warangal", "Guntur", "Bhiwandi", "Saharanpur",
-            "Gorakhpur", "Bikaner", "Amravati", "Noida", "Jamshedpur", "Bhilai", "Cuttack",
-            "Firozabad", "Kochi", "Nellore", "Bhavnagar", "Jammu", "Udaipur", "Davangere",
-            "Bellary", "Kurnool", "Malegaon", "Kolhapur", "Ajmer", "Anantapur", "Erode",
-            "Rourkela", "Tirunelveli", "Akola", "Latur", "Panipat", "Mathura", "Kollam",
-            "Bilaspur", "Shimoga", "Chandrapur", "Junagadh", "Thrissur", "Alwar", "Bardhaman",
-            "Kakinada", "Nizamabad", "Parbhani", "Tumkur", "Hisar", "Kharagpur", "Nanded",
-            "Ichalkaranji", "Bathinda", "Shahjahanpur", "Rampur", "Ratlam", "Hapur", "Rewa");
-
-    private Map<String, List<String>> stateCityMap = new HashMap<>() {
-        {
-            put("Maharashtra",
-                    List.of("Mumbai", "Pune", "Nagpur", "Thane", "Nashik", "Aurangabad", "Solapur", "Bhiwandi",
-                            "Amravati", "Kolhapur", "Akola", "Latur", "Nanded", "Ichalkaranji", "Parbhani",
-                            "Chandrapur"));
-            put("Delhi", List.of("Delhi", "New Delhi"));
-            put("Karnataka",
-                    List.of("Bangalore", "Mysore", "Hubli–Dharwad", "Davangere", "Bellary", "Shimoga", "Tumkur"));
-            put("Telangana", List.of("Hyderabad", "Warangal", "Nizamabad", "Kakinada"));
-            put("Tamil Nadu", List.of("Chennai", "Coimbatore", "Madurai", "Tiruchirappalli", "Tiruppur", "Salem",
-                    "Erode", "Tirunelveli"));
-            put("West Bengal", List.of("Kolkata", "Bardhaman", "Kharagpur"));
-            put("Rajasthan", List.of("Jaipur", "Jodhpur", "Kota", "Bikaner", "Ajmer", "Udaipur", "Alwar"));
-            put("Gujarat", List.of("Ahmedabad", "Vadodara", "Rajkot", "Bhavnagar", "Junagadh"));
-            put("Uttar Pradesh",
-                    List.of("Lucknow", "Kanpur", "Ghaziabad", "Agra", "Meerut", "Varanasi", "Allahabad", "Bareilly",
-                            "Moradabad", "Aligarh", "Saharanpur", "Gorakhpur", "Firozabad", "Mathura", "Shahjahanpur",
-                            "Rampur", "Hapur"));
-            put("Madhya Pradesh", List.of("Indore", "Bhopal", "Jabalpur", "Gwalior", "Ratlam", "Rewa"));
-            put("Andhra Pradesh", List.of("Visakhapatnam", "Vijayawada", "Guntur", "Nellore", "Anantapur", "Kurnool"));
-            put("Bihar", List.of("Patna", "Gaya", "Bhagalpur"));
-            put("Haryana", List.of("Faridabad", "Hisar", "Panipat"));
-            put("Punjab", List.of("Ludhiana", "Amritsar", "Jalandhar", "Bathinda"));
-            put("Jammu and Kashmir", List.of("Srinagar", "Jammu"));
-            put("Jharkhand", List.of("Dhanbad", "Ranchi", "Jamshedpur"));
-            put("Chhattisgarh", List.of("Raipur", "Bhilai", "Bilaspur"));
-            put("Assam", List.of("Guwahati"));
-            put("Chandigarh", List.of("Chandigarh"));
-            put("Uttarakhand", List.of("Dehradun"));
-            put("Odisha", List.of("Bhubaneswar", "Cuttack", "Rourkela"));
-            put("Kerala", List.of("Kochi", "Kollam", "Thrissur"));
-        }
-    };
-
-    private Map<String, String> cityPincodeMap = new HashMap<>() {
-        {
-            put("Mumbai", "400001");
-            put("Delhi", "110001");
-            put("Bangalore", "560001");
-            put("Hyderabad", "500001");
-            put("Chennai", "600001");
-            put("Kolkata", "700001");
-            put("Pune", "411001");
-            put("Jaipur", "302001");
-            put("Ahmedabad", "380001");
-            put("Lucknow", "226001");
-            put("Kanpur", "208001");
-            put("Nagpur", "440001");
-            put("Indore", "452001");
-            put("Thane", "400601");
-            put("Bhopal", "462001");
-            put("Visakhapatnam", "530001");
-            put("Patna", "800001");
-            put("Vadodara", "390001");
-            put("Ghaziabad", "201001");
-            put("Ludhiana", "141001");
-            put("Agra", "282001");
-            put("Nashik", "422001");
-            put("Faridabad", "121001");
-            put("Meerut", "250001");
-            put("Rajkot", "360001");
-            put("Varanasi", "221001");
-            put("Srinagar", "190001");
-            put("Aurangabad", "431001");
-            put("Dhanbad", "826001");
-            put("Amritsar", "143001");
-            put("Allahabad", "211001");
-            put("Ranchi", "834001");
-            put("Coimbatore", "641001");
-            put("Jabalpur", "482001");
-            put("Gwalior", "474001");
-            put("Vijayawada", "520001");
-            put("Jodhpur", "342001");
-            put("Madurai", "625001");
-            put("Raipur", "492001");
-            put("Kota", "324001");
-            put("Guwahati", "781001");
-            put("Chandigarh", "160001");
-            put("Solapur", "413001");
-            put("Hubli–Dharwad", "580001");
-            put("Bareilly", "243001");
-            put("Moradabad", "244001");
-            put("Mysore", "570001");
-            put("Tiruchirappalli", "620001");
-            put("Tiruppur", "641601");
-            put("Dehradun", "248001");
-            put("Jalandhar", "144001");
-            put("Aligarh", "202001");
-            put("Bhubaneswar", "751001");
-            put("Salem", "636001");
-            put("Warangal", "506001");
-            put("Guntur", "522001");
-            put("Bhiwandi", "421308");
-            put("Saharanpur", "247001");
-            put("Gorakhpur", "273001");
-            put("Bikaner", "334001");
-            put("Amravati", "444601");
-            put("Noida", "201301");
-            put("Jamshedpur", "831001");
-            put("Bhilai", "490001");
-            put("Cuttack", "753001");
-            put("Firozabad", "283203");
-            put("Kochi", "682001");
-            put("Nellore", "524001");
-            put("Bhavnagar", "364001");
-            put("Jammu", "180001");
-            put("Udaipur", "313001");
-            put("Davangere", "577001");
-            put("Bellary", "583101");
-            put("Kurnool", "518001");
-            put("Malegaon", "423203");
-            put("Kolhapur", "416001");
-            put("Ajmer", "305001");
-            put("Anantapur", "515001");
-            put("Erode", "638001");
-            put("Rourkela", "769001");
-            put("Tirunelveli", "627001");
-            put("Akola", "444001");
-            put("Latur", "413512");
-            put("Panipat", "132103");
-            put("Mathura", "281001");
-            put("Kollam", "691001");
-            put("Bilaspur", "495001");
-            put("Shimoga", "577201");
-            put("Chandrapur", "442401");
-            put("Junagadh", "362001");
-            put("Thrissur", "680001");
-            put("Alwar", "301001");
-            put("Bardhaman", "713101");
-            put("Kakinada", "533001");
-            put("Nizamabad", "503001");
-            put("Parbhani", "431401");
-            put("Tumkur", "572101");
-            put("Hisar", "125001");
-            put("Kharagpur", "721301");
-            put("Nanded", "431601");
-            put("Ichalkaranji", "416115");
-            put("Bathinda", "151001");
-            put("Shahjahanpur", "242001");
-            put("Rampur", "244901");
-            put("Ratlam", "457001");
-            put("Hapur", "245101");
-            put("Rewa", "486001");
-        }
-    };
+    private static final String LAST_LOCATION_SESSION_KEY = "lastUsedLocation";
 
     // Home Page
     @GetMapping("/")
@@ -431,6 +271,11 @@ public class SpotUIController {
                     SpotResponseDTO.class);
 
             if (response.getStatusCode().is2xxSuccessful()) {
+                // Store the last used location in the session
+                LocationDTO lastLocation = new LocationDTO();
+                BeanUtils.copyProperties(spotCreateDTO.getLocation(), lastLocation);
+                request.getSession().setAttribute(LAST_LOCATION_SESSION_KEY, lastLocation);
+
                 return "redirect:/spots/search?spotCreationSuccess";
             } else {
                 model.addAttribute("error", "Spot creation failed");
@@ -455,34 +300,88 @@ public class SpotUIController {
             return "redirect:/login";
         }
 
-        model.addAttribute("spotCreateDTO", new SpotCreateDTO());
-        model.addAttribute("spotTypes", SpotType.values());
-        model.addAttribute("priceTypes", PriceType.values());
-        model.addAttribute("vehicleTypes", VehicleType.values());
+        SpotCreateDTO spotCreateDTO = new SpotCreateDTO();
 
-        // Add states, cities, and pincode mappings
-        model.addAttribute("states", stateCityMap.keySet());
-        model.addAttribute("cities", cities);
-        model.addAttribute("stateCityMap", stateCityMap);
-        model.addAttribute("cityPincodeMap", cityPincodeMap);
+        // Retrieve last used location from session
+        LocationDTO lastLocation = (LocationDTO) request.getSession().getAttribute(LAST_LOCATION_SESSION_KEY);
+        model.addAttribute("lastUsedLocation", lastLocation);
+
+        try {
+            // Fetch states from backend
+            ResponseEntity<List<String>> statesResponse = restTemplate.exchange(
+                BASE_URL + "/locations/states", 
+                HttpMethod.GET, 
+                null, 
+                new ParameterizedTypeReference<List<String>>() {}
+            );
+            List<String> states = statesResponse.getBody();
+
+            // Fetch all cities from backend (for spot creation)
+            ResponseEntity<List<String>> citiesResponse = restTemplate.exchange(
+                BASE_URL + "/locations/cities", 
+                HttpMethod.GET, 
+                null, 
+                new ParameterizedTypeReference<List<String>>() {}
+            );
+            List<String> cities = citiesResponse.getBody();
+
+            // Fetch state-city map
+            ResponseEntity<Map<String, List<String>>> stateCityMapResponse = restTemplate.exchange(
+                BASE_URL + "/locations/state-city-map", 
+                HttpMethod.GET, 
+                null, 
+                new ParameterizedTypeReference<Map<String, List<String>>>() {}
+            );
+            Map<String, List<String>> stateCityMap = stateCityMapResponse.getBody();
+
+            // Fetch city-pincode map
+            ResponseEntity<Map<String, String>> cityPincodeMapResponse = restTemplate.exchange(
+                BASE_URL + "/locations/city-pincode-map", 
+                HttpMethod.GET, 
+                null, 
+                new ParameterizedTypeReference<Map<String, String>>() {}
+            );
+            Map<String, String> cityPincodeMap = cityPincodeMapResponse.getBody();
+
+            model.addAttribute("spotCreateDTO", spotCreateDTO);
+            model.addAttribute("spotTypes", SpotType.values());
+            model.addAttribute("priceTypes", PriceType.values());
+            model.addAttribute("vehicleTypes", VehicleType.values());
+
+            // Add states, cities, and pincode mappings
+            model.addAttribute("states", states);
+            model.addAttribute("cities", cities);
+            model.addAttribute("stateCityMap", stateCityMap);
+            model.addAttribute("cityPincodeMap", cityPincodeMap);
+
+        } catch (Exception e) {
+            model.addAttribute("error", "Error fetching location data: " + e.getMessage());
+        }
 
         return "spot_create";
+    }
+
+    // Optional: Method to clear last used location
+    @GetMapping("/spots/clear-last-location")
+    public String clearLastLocation(HttpServletRequest request) {
+        request.getSession().removeAttribute(LAST_LOCATION_SESSION_KEY);
+        return "redirect:/spots/create";
     }
 
     @GetMapping("/api/cities-by-state")
     @ResponseBody
     public List<Map<String, String>> getCitiesByState(@RequestParam String state) {
-        List<String> stateCities = stateCityMap.getOrDefault(state, Collections.emptyList());
-
-        List<Map<String, String>> result = new ArrayList<>();
-        for (String city : stateCities) {
-            Map<String, String> cityData = new HashMap<>();
-            cityData.put("name", city);
-            cityData.put("pincode", cityPincodeMap.getOrDefault(city, ""));
-            result.add(cityData);
+        try {
+            ResponseEntity<List<Map<String, String>>> response = restTemplate.exchange(
+                BASE_URL + "/locations/cities-by-state?state=" + state,
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<List<Map<String, String>>>() {}
+            );
+            return response.getBody();
+        } catch (Exception e) {
+            return Collections.emptyList();
         }
-
-        return result;
     }
 
     @GetMapping("/spots/search")
@@ -499,64 +398,88 @@ public class SpotUIController {
             return "redirect:/login";
         }
 
-        // Check if any filters are applied
-        boolean hasFilters = city != null || spotType != null || hasEVCharging != null ||
-                supportedVehicleType != null || status != null;
+        // Fetch cities with existing spots
+        try {
+            ResponseEntity<SpotResponseDTO[]> spotsResponse = restTemplate.exchange(
+                BASE_URL + "/spots/all",
+                HttpMethod.GET,
+                null,
+                SpotResponseDTO[].class
+            );
+            SpotResponseDTO[] allSpots = spotsResponse.getBody();
 
-        SpotResponseDTO[] spots;
+            // Extract unique cities with spots
+            Set<String> citiesWithSpots = Arrays.stream(allSpots)
+                .map(spot -> spot.getLocation().getCity())
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
 
-        if (hasFilters) {
-            // If filters applied, use search endpoint
-            // Prepare search criteria
-            MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
-            if (city != null && !city.isEmpty())
-                params.add("city", city);
-            if (spotType != null)
-                params.add("spotType", spotType.toString());
-            if (hasEVCharging != null)
-                params.add("hasEVCharging", hasEVCharging.toString());
-            if (supportedVehicleType != null)
-                params.add("supportedVehicleType", supportedVehicleType.toString());
-            if (status != null)
-                params.add("status", status.toString());
+            // Sort the cities with spots
+            List<String> sortedCitiesWithSpots = new ArrayList<>(citiesWithSpots);
+            Collections.sort(sortedCitiesWithSpots);
 
-            String queryParams = params
-                    .entrySet()
-                    .stream()
-                    .map(entry -> entry.getKey() + "=" + entry.getValue().get(0))
-                    .collect(Collectors.joining("&"));
+            // Rest of the existing search logic remains the same
+            boolean hasFilters = city != null || spotType != null || hasEVCharging != null ||
+                    supportedVehicleType != null || status != null;
 
-            String urlWithParams = BASE_URL + "/spots/search?" + queryParams;
+            SpotResponseDTO[] spots;
 
-            try {
-                ResponseEntity<SpotResponseDTO[]> response = restTemplate.exchange(
-                        urlWithParams,
-                        HttpMethod.GET,
-                        null,
-                        SpotResponseDTO[].class);
-                spots = response.getBody();
-            } catch (Exception e) {
-                spots = new SpotResponseDTO[0]; // Empty array on error
-                model.addAttribute("error", "Error fetching filtered spots: " + e.getMessage());
+            if (hasFilters) {
+                // If filters applied, use search endpoint
+                MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+                if (city != null && !city.isEmpty())
+                    params.add("city", city);
+                if (spotType != null)
+                    params.add("spotType", spotType.toString());
+                if (hasEVCharging != null)
+                    params.add("hasEVCharging", hasEVCharging.toString());
+                if (supportedVehicleType != null)
+                    params.add("supportedVehicleType", supportedVehicleType.toString());
+                if (status != null)
+                    params.add("status", status.toString());
+
+                String queryParams = params
+                        .entrySet()
+                        .stream()
+                        .map(entry -> entry.getKey() + "=" + entry.getValue().get(0))
+                        .collect(Collectors.joining("&"));
+
+                String urlWithParams = BASE_URL + "/spots/search?" + queryParams;
+
+                try {
+                    ResponseEntity<SpotResponseDTO[]> response = restTemplate.exchange(
+                            urlWithParams,
+                            HttpMethod.GET,
+                            null,
+                            SpotResponseDTO[].class);
+                    spots = response.getBody();
+                } catch (Exception e) {
+                    spots = new SpotResponseDTO[0]; // Empty array on error
+                    model.addAttribute("error", "Error fetching filtered spots: " + e.getMessage());
+                }
+            } else {
+                // If no filters, get all spots
+                try {
+                    spots = restTemplate.getForObject(BASE_URL + "/spots/all", SpotResponseDTO[].class);
+                } catch (Exception e) {
+                    spots = new SpotResponseDTO[0]; // Empty array on error
+                    model.addAttribute("error", "Error fetching all spots: " + e.getMessage());
+                }
             }
-        } else {
-            // If no filters, get all spots
-            try {
-                spots = restTemplate.getForObject(BASE_URL + "/spots/all", SpotResponseDTO[].class);
-            } catch (Exception e) {
-                spots = new SpotResponseDTO[0]; // Empty array on error
-                model.addAttribute("error", "Error fetching all spots: " + e.getMessage());
-            }
+
+            // Add all necessary data to the model
+            model.addAttribute("spots", spots);
+            model.addAttribute("spotTypes", SpotType.values());
+            model.addAttribute("vehicleTypes", VehicleType.values());
+            model.addAttribute("status", SpotStatus.values());
+            model.addAttribute("cities", sortedCitiesWithSpots); // Now uses only cities with spots
+
+        } catch (Exception e) {
+            model.addAttribute("error", "Error fetching spots: " + e.getMessage());
+            model.addAttribute("cities", Collections.emptyList());
         }
 
-        // Add all necessary data to the model
-        model.addAttribute("spots", spots);
-        model.addAttribute("spotTypes", SpotType.values());
-        model.addAttribute("vehicleTypes", VehicleType.values());
-        model.addAttribute("status", SpotStatus.values());
-        model.addAttribute("cities", cities);
-
-        return "search_spots"; // This will be the name of your new Thymeleaf template
+        return "search_spots";
     }
 
     @GetMapping("/spots/statistics")
@@ -604,6 +527,13 @@ public class SpotUIController {
             ResponseEntity<SpotResponseDTO> response = restTemplate.getForEntity(
                     BASE_URL + "/spots/" + spotId,
                     SpotResponseDTO.class);
+            ResponseEntity<List<String>> citiesResponse = restTemplate.exchange(
+                BASE_URL + "/locations/cities", 
+                HttpMethod.GET, 
+                null, 
+                        new ParameterizedTypeReference<List<String>>() {}
+            );
+            List<String> cities = citiesResponse.getBody();
 
             if (response.getStatusCode().is2xxSuccessful()) {
                 SpotResponseDTO spot = response.getBody();
@@ -953,9 +883,6 @@ public class SpotUIController {
         }
 
         model.addAttribute("spots", spots);
-        model.addAttribute("spotTypes", SpotType.values());
-        model.addAttribute("vehicleTypes", VehicleType.values());
-        model.addAttribute("cities", cities);
 
         return "search_spots_by_date";
     }

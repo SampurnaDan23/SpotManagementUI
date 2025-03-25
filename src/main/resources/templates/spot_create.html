@@ -526,6 +526,16 @@
         font-weight: 500;
         color: var(--dark-text);
       }
+
+      .last-location-toggle {
+        display: flex;
+        align-items: center;
+        margin-top: 10px;
+      }
+  
+      .last-location-toggle input[type="checkbox"] {
+        margin-right: 10px;
+      }
     </style>
   </head>
   <body>
@@ -673,6 +683,19 @@
             <div class="form-step" id="step2">
               <div class="section-title">
                 <i class="fas fa-map-marker-alt"></i> Location Details
+              </div>
+
+              <div class="form-group">
+                <div class="last-location-toggle">
+                  <input 
+                    type="checkbox" 
+                    id="sameAsLastLocation" 
+                    name="sameAsLastLocation"
+                  />
+                  <label for="sameAsLastLocation">
+                    Same as Last Location
+                  </label>
+                </div>
               </div>
 
               <div class="form-group">
@@ -912,8 +935,8 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script th:inline="javascript">
-      const stateCityMap = {};
-      const cityPincodeMap = {};
+      const stateCityMap = /*[[${stateCityMap}]]*/ {};
+      const cityPincodeMap = /*[[${cityPincodeMap}]]*/ {};
 
       function initImageUpload() {
         const imageUploadContainer = document.getElementById(
@@ -999,7 +1022,9 @@
       }
 
       $(document).ready(function () {
+
         initImageUpload();
+
         // Initialize Select2
         $("#stateSelect, #citySelect, #spotType, #priceType").select2({
           width: "100%",
@@ -1008,6 +1033,8 @@
 
         // Multi-step form navigation
         let currentStep = 1;
+        // Track the last used location
+        const lastUsedLocation = /*[[${lastUsedLocation}]]*/ null;
         updateProgressBar(currentStep);
 
         // Next button handlers
@@ -1221,6 +1248,77 @@
             $("#location\\.pincode").val(cityPincodeMap[selectedCity]);
           } else {
             $("#location\\.pincode").val("");
+          }
+        });
+
+        if (lastUsedLocation) {
+          $('#sameAsLastLocation').prop('checked', true);
+          
+          // Populate location fields
+          $('#location\\.streetAddress').val(lastUsedLocation.streetAddress || '');
+          
+          if (lastUsedLocation.state) {
+              $('#stateSelect').val(lastUsedLocation.state).trigger('change');
+              
+              // Wait for cities to populate, then set city
+              setTimeout(() => {
+                  if (lastUsedLocation.city) {
+                      $('#citySelect').val(lastUsedLocation.city).trigger('change');
+                  }
+              }, 100);
+          }
+          
+          $('#location\\.landmark').val(lastUsedLocation.landmark || '');
+          $('#location\\.pincode').val(lastUsedLocation.pincode || '');
+        }
+
+        // Optional: Add a button to clear last location
+        $('#clearLastLocation').click(function() {
+            window.location.href = '/spots/clear-last-location';
+        });
+
+        // Existing code for "Same as Last Location" checkbox remains the same
+        $('#sameAsLastLocation').change(function() {
+            if (!$(this).is(':checked')) {
+                // Clear all location fields when unchecked
+                $('#location\\.streetAddress').val('');
+                $('#stateSelect').val('').trigger('change');
+                $('#location\\.landmark').val('');
+                $('#location\\.pincode').val('');
+            }
+        });
+
+        // Before form submission, store the current location
+        $('form').on('submit', function() {
+          lastUsedLocation = {
+            streetAddress: $('#location\\.streetAddress').val(),
+            state: $('#stateSelect').val(),
+            city: $('#citySelect').val(),
+            pincode: $('#location\\.pincode').val(),
+            landmark: $('#location\\.landmark').val()
+          };
+        });
+
+        // Add event listener for "Same as Last Location" checkbox
+        $('#sameAsLastLocation').change(function() {
+          if ($(this).is(':checked') && lastUsedLocation) {
+            // Populate form with last used location
+            $('#location\\.streetAddress').val(lastUsedLocation.streetAddress);
+            
+            // Trigger state select change to populate cities
+            $('#stateSelect').val(lastUsedLocation.state).trigger('change');
+            
+            // Wait for cities to populate, then set city
+            setTimeout(() => {
+              $('#citySelect').val(lastUsedLocation.city).trigger('change');
+            }, 100);
+            
+            $('#location\\.landmark').val(lastUsedLocation.landmark);
+          } else {
+            // Clear form if unchecked
+            $('#location\\.streetAddress').val('');
+            $('#stateSelect').val('').trigger('change');
+            $('#location\\.landmark').val('');
           }
         });
       });
