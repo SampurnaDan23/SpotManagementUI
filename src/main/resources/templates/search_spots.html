@@ -320,15 +320,15 @@
                             </option>
                         </select>
                     </div>
-                    
-                    <div class="filter-item d-none d-md-block">
-                        <label class="form-label">Spot Type</label>
-                        <select name="spotType" class="form-select">
-                            <option value="">All Types</option>
-                            <option th:each="type : ${spotTypes}" 
+
+                    <div class="col-md-4">
+                        <label class="form-label">Vehicle Type</label>
+                        <select name="supportedVehicleType" class="form-select">
+                            <option value="">All Vehicles</option>
+                            <option th:each="type : ${vehicleTypes}" 
                                     th:value="${type}" 
                                     th:text="${type}"
-                                    th:selected="${param.spotType == type}">
+                                    th:selected="${param.supportedVehicleType == type}">
                             </option>
                         </select>
                     </div>
@@ -359,14 +359,14 @@
                             </select>
                         </div>
                         
-                        <div class="col-md-4">
-                            <label class="form-label">Vehicle Type</label>
-                            <select name="supportedVehicleType" class="form-select">
-                                <option value="">All Vehicles</option>
-                                <option th:each="type : ${vehicleTypes}" 
+                        <div class="filter-item d-none d-md-block">
+                            <label class="form-label">Spot Type</label>
+                            <select name="spotType" class="form-select">
+                                <option value="">All Types</option>
+                                <option th:each="type : ${spotTypes}" 
                                         th:value="${type}" 
                                         th:text="${type}"
-                                        th:selected="${param.supportedVehicleType == type}">
+                                        th:selected="${param.spotType == type}">
                                 </option>
                             </select>
                         </div>
